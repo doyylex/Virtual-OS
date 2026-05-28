@@ -22,6 +22,26 @@ const constrainPosition = (position, size) => {
   };
 };
 
+const constrainResizeGeometry = (position, size, minSize) => {
+  const bounds = getDesktopBounds();
+  const minimumSize = {
+    width: minSize?.width ?? 320,
+    height: minSize?.height ?? 220,
+  };
+  const nextPosition = {
+    x: clamp(position.x, 0, Math.max(0, bounds.width - minimumSize.width)),
+    y: clamp(position.y, 0, Math.max(0, bounds.height - minimumSize.height)),
+  };
+
+  return {
+    position: nextPosition,
+    size: {
+      width: clamp(size.width, minimumSize.width, bounds.width - nextPosition.x),
+      height: clamp(size.height, minimumSize.height, bounds.height - nextPosition.y),
+    },
+  };
+};
+
 const bringToFront = (windowId, state, launchData) => {
   const nextZIndex = state.zCounter + 1;
   const shouldUpdateLaunchData = launchData !== undefined;
@@ -201,5 +221,27 @@ export const useWindowStore = create((set) => ({
           ? { ...windowItem, position: constrainPosition(position, windowItem.size) }
           : windowItem,
       ),
+    })),
+
+  resizeWindow: (windowId, geometry) =>
+    set((state) => ({
+      windows: state.windows.map((windowItem) => {
+        if (windowItem.id !== windowId || windowItem.isMaximized) {
+          return windowItem;
+        }
+
+        const app = getAppById(windowItem.appId);
+        const nextGeometry = constrainResizeGeometry(
+          geometry.position ?? windowItem.position,
+          geometry.size ?? windowItem.size,
+          app?.minSize,
+        );
+
+        return {
+          ...windowItem,
+          position: nextGeometry.position,
+          size: nextGeometry.size,
+        };
+      }),
     })),
 }));

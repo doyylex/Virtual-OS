@@ -342,6 +342,11 @@
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.26);
 }
 
+.ros-window[data-resizing='true'] {
+  border-color: #2f7cff;
+  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.36), 0 0 0 1px rgba(255, 255, 255, 0.48);
+}
+
 .ros-window[data-maximized='true'] {
   border-radius: 0;
   border-width: 2px;
@@ -367,6 +372,23 @@
 .ros-window-body {
   background: #fff;
   border-top: 1px solid #083896;
+}
+
+.ros-window[data-maximized='true'] .ros-window-resize-handle {
+  display: none;
+}
+
+.ros-window-resize-handle[data-direction='se']::after {
+  position: absolute;
+  right: 3px;
+  bottom: 3px;
+  width: 8px;
+  height: 8px;
+  content: '';
+  opacity: 0.28;
+  background:
+    linear-gradient(135deg, transparent 0 34%, rgba(255, 255, 255, 0.88) 35% 44%, transparent 45% 100%),
+    linear-gradient(135deg, transparent 0 58%, rgba(16, 67, 160, 0.72) 59% 68%, transparent 69% 100%);
 }
 
 .ros-window-control {

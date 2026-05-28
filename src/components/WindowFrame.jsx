@@ -1,6 +1,9 @@
 import { useDraggableWindow } from '../hooks/useDraggableWindow.js';
+import { useResizableWindow } from '../hooks/useResizableWindow.js';
 import { useWindowStore } from '../store/useWindowStore.js';
 import { WindowControls } from './WindowControls.jsx';
+
+const resizeDirections = ['n', 'e', 's', 'w', 'ne', 'se', 'sw', 'nw'];
 
 export function WindowFrame({ app, children, windowItem }) {
   const activeWindowId = useWindowStore((state) => state.activeWindowId);
@@ -10,6 +13,7 @@ export function WindowFrame({ app, children, windowItem }) {
   const minimizeWindow = useWindowStore((state) => state.minimizeWindow);
   const restoreWindow = useWindowStore((state) => state.restoreWindow);
   const handleTitlebarPointerDown = useDraggableWindow(windowItem);
+  const { getResizeHandleProps, isResizing } = useResizableWindow(windowItem, app);
   const isActive = activeWindowId === windowItem.id;
 
   const handleTitlebarDoubleClick = () => {
@@ -25,6 +29,7 @@ export function WindowFrame({ app, children, windowItem }) {
       className="ros-window"
       data-active={isActive ? 'true' : 'false'}
       data-maximized={windowItem.isMaximized ? 'true' : 'false'}
+      data-resizing={isResizing ? 'true' : 'false'}
       style={{
         left: `${windowItem.position.x}px`,
         top: `${windowItem.position.y}px`,
@@ -51,6 +56,15 @@ export function WindowFrame({ app, children, windowItem }) {
         />
       </header>
       <div className="ros-window-body">{children}</div>
+      {resizeDirections.map((direction) => (
+        <span
+          className="ros-window-resize-handle"
+          data-direction={direction}
+          key={direction}
+          aria-hidden="true"
+          {...getResizeHandleProps(direction)}
+        />
+      ))}
     </section>
   );
 }
