@@ -1,0 +1,184 @@
+.ros-desktop {
+  position: fixed;
+  inset: 0 0 var(--ros-taskbar-height) 0;
+  overflow: hidden;
+}
+
+.ros-wallpaper {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.ros-desktop-icons {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+}
+
+.ros-window-stage {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  pointer-events: none;
+}
+
+.ros-taskbar {
+  position: fixed;
+  z-index: 10;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  align-items: stretch;
+  height: var(--ros-taskbar-height);
+}
+
+.ros-quick-launch {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  flex: 0 0 auto;
+  padding: 4px 7px 3px;
+}
+
+.ros-taskbar-windows {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  flex: 1;
+  padding: 4px 8px 3px;
+}
+
+.ros-taskbar-spacer {
+  min-width: 8px;
+  flex: 0 0 8px;
+}
+
+.ros-tray {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 88px;
+  padding: 0 12px;
+}
+
+.ros-start-menu {
+  position: absolute;
+  left: 4px;
+  bottom: calc(var(--ros-taskbar-height) + 2px);
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  width: min(var(--ros-menu-width), calc(100vw - 12px));
+  max-height: calc(100dvh - var(--ros-taskbar-height) - 14px);
+  overflow: hidden;
+}
+
+.ros-start-menu-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 168px;
+  min-height: 318px;
+}
+
+.ros-start-menu-column {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px;
+}
+
+.ros-window {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  min-width: 320px;
+  min-height: 220px;
+  overflow: hidden;
+  pointer-events: auto;
+}
+
+.ros-window-titlebar {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 6px;
+  min-height: 30px;
+  padding: 3px 4px 3px 7px;
+  touch-action: none;
+}
+
+.ros-window-body {
+  min-height: 0;
+  flex: 1;
+  overflow: hidden;
+}
+
+.ros-computer-app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.ros-computer-layout {
+  display: grid;
+  grid-template-columns: 172px minmax(0, 1fr);
+  min-height: 0;
+  flex: 1;
+}
+
+.ros-computer-sidebar,
+.ros-computer-content {
+  min-height: 0;
+  overflow: auto;
+}
+
+.ros-file-explorer-app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.ros-file-explorer-layout {
+  display: grid;
+  grid-template-columns: 168px minmax(0, 1fr) 190px;
+  min-height: 0;
+  flex: 1;
+}
+
+.ros-file-tree,
+.ros-file-list,
+.ros-file-details {
+  min-height: 0;
+  overflow: auto;
+}
+
+.ros-settings-app {
+  height: 100%;
+  overflow: auto;
+}
+
+.ros-properties-app {
+  height: 100%;
+  overflow: auto;
+}
+
+.ros-settings-section {
+  min-height: 100%;
+}
+
+.ros-notepad-app,
+.ros-terminal-app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.ros-notepad-editor,
+.ros-terminal-output {
+  min-height: 0;
+  flex: 1;
+}

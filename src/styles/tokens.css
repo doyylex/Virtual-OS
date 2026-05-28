@@ -1,0 +1,23 @@
+:root {
+  color-scheme: light;
+  --ros-font-ui: Tahoma, Verdana, Segoe UI, sans-serif;
+  --ros-taskbar-height: 40px;
+  --ros-desktop-padding: 18px;
+  --ros-focus-ring: #f4d35e;
+  --ros-white: #ffffff;
+  --ros-ink: #10204a;
+  --ros-blue-900: #0b246d;
+  --ros-blue-800: #123c9d;
+  --ros-blue-700: #1d55d6;
+  --ros-blue-600: #245edb;
+  --ros-blue-500: #2f74ef;
+  --ros-blue-300: #75a8ff;
+  --ros-green-700: #1d7b17;
+  --ros-green-600: #2f9d20;
+  --ros-green-500: #51b33b;
+  --ros-orange-500: #f28c28;
+  --ros-menu-width: 392px;
+  --ros-menu-radius: 8px;
+  --ros-shadow-window: 0 12px 34px rgba(0, 0, 0, 0.36);
+  --ros-shadow-control: inset 0 1px 0 rgba(255, 255, 255, 0.46);
+}

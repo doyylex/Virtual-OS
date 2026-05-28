@@ -1,0 +1,24 @@
+body {
+  overflow: hidden;
+  font-family: var(--ros-font-ui);
+  background: #245edb;
+  color: var(--ros-white);
+  user-select: none;
+}
+
+button {
+  cursor: default;
+}
+
+button:focus-visible {
+  outline: 2px solid var(--ros-focus-ring);
+  outline-offset: 2px;
+}
+
+.ros-root {
+  position: relative;
+  width: 100vw;
+  height: 100dvh;
+  min-height: 480px;
+  overflow: hidden;
+}

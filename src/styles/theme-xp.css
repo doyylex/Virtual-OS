@@ -1,0 +1,635 @@
+.ros-wallpaper {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.55) 0 1px, transparent 1px 100%),
+    linear-gradient(180deg, #4d9bea 0%, #6ec9ff 48%, #7dcc62 49%, #2e8f28 100%);
+}
+
+.ros-wallpaper::before {
+  position: absolute;
+  right: -8vw;
+  bottom: -21vh;
+  left: -14vw;
+  height: 47vh;
+  content: '';
+  background: linear-gradient(145deg, #6dc94d 0%, #2d9a28 48%, #1d7119 100%);
+  border-radius: 58% 45% 0 0 / 86% 72% 0 0;
+  transform: rotate(-2deg);
+}
+
+.ros-wallpaper::after {
+  position: absolute;
+  right: -5vw;
+  bottom: -26vh;
+  left: 42vw;
+  height: 55vh;
+  content: '';
+  background: linear-gradient(150deg, #8bdc68 0%, #2e8f28 68%, #176416 100%);
+  border-radius: 54% 0 0 0 / 76% 0 0 0;
+  transform: rotate(2deg);
+}
+
+.ros-desktop[data-wallpaper='azul'] .ros-wallpaper {
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.4), transparent 28%),
+    radial-gradient(circle at 18% 22%, #8bd5ff 0%, transparent 34%),
+    linear-gradient(160deg, #0b4fc4 0%, #25a3f5 54%, #0854b8 100%);
+}
+
+.ros-desktop[data-wallpaper='azul'] .ros-wallpaper::before,
+.ros-desktop[data-wallpaper='azul'] .ros-wallpaper::after,
+.ros-desktop[data-wallpaper='plata'] .ros-wallpaper::before,
+.ros-desktop[data-wallpaper='plata'] .ros-wallpaper::after {
+  display: none;
+}
+
+.ros-desktop[data-wallpaper='plata'] .ros-wallpaper {
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.72), transparent 38%),
+    linear-gradient(160deg, #dce4f2 0%, #99abc7 48%, #647792 100%);
+}
+
+.ros-desktop-icon[data-selected='true'],
+.ros-desktop-icon:focus-visible {
+  background: rgba(49, 106, 197, 0.42);
+  border-color: rgba(222, 235, 255, 0.72);
+}
+
+.ros-desktop-icon[data-dragging='true'] {
+  opacity: 0.82;
+  filter: drop-shadow(0 8px 10px rgba(0, 0, 0, 0.35));
+}
+
+.ros-desktop-icon[data-selected='true'] .ros-desktop-icon-label {
+  background: rgba(14, 58, 161, 0.86);
+}
+
+.ros-desktop-icon-input {
+  background: #ffffff;
+  border: 1px solid #0a4ec4;
+  outline: none;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.85);
+}
+
+.ros-icon-shell {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+.ros-icon-shell[data-tone='computer'] {
+  background: linear-gradient(#f7f9ff, #a8bddf 52%, #6b7da1 53%);
+}
+
+.ros-icon-shell[data-tone='folder'] {
+  background: linear-gradient(#ffe589 0 35%, #f3b63f 36% 100%);
+}
+
+.ros-icon-shell[data-tone='screen'] {
+  background: linear-gradient(#91d2ff, #245edb 68%, #1a337d 69%);
+}
+
+.ros-icon-shell[data-tone='settings'] {
+  background: linear-gradient(135deg, #fafafa, #91a3c9 58%, #536c9e);
+}
+
+.ros-icon-shell[data-tone='notepad'] {
+  background: linear-gradient(180deg, #ffffff 0 18%, #f7f0c3 19% 100%);
+}
+
+.ros-icon-shell[data-tone='terminal'] {
+  background: linear-gradient(135deg, #273040, #05080c 72%);
+}
+
+.ros-icon-shell[data-tone='bin'] {
+  background: linear-gradient(#eef7ff, #94b6cf 70%, #668194);
+}
+
+.ros-icon-mark {
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(12, 45, 102, 0.4);
+  box-shadow: inset 0 -3px 0 rgba(34, 81, 151, 0.22);
+}
+
+.ros-context-menu {
+  background: #ffffff;
+  border: 1px solid #8a867a;
+  box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.38);
+}
+
+.ros-context-menu-item:hover,
+.ros-context-menu-item:focus-visible {
+  color: #ffffff;
+  background: linear-gradient(180deg, #4e8af5, #2364d5);
+  outline: none;
+}
+
+.ros-context-menu-item:hover small,
+.ros-context-menu-item:focus-visible small {
+  color: #e8f0ff;
+}
+
+.ros-context-menu-item:disabled {
+  color: #9c9c9c;
+}
+
+.ros-context-menu-separator {
+  background: #d6d2c2;
+  box-shadow: 0 1px 0 #ffffff;
+}
+
+.ros-taskbar {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.42) 0 2px, transparent 2px),
+    linear-gradient(180deg, #2e78f2 0%, var(--ros-blue-600) 16%, #1748b8 52%, #123b96 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.48);
+}
+
+.ros-start-button {
+  background:
+    radial-gradient(circle at 18% 16%, rgba(255, 255, 255, 0.55), transparent 22%),
+    linear-gradient(180deg, #76d36a 0%, var(--ros-green-600) 46%, #147510 100%);
+  border-radius: 0 18px 18px 0;
+  box-shadow: var(--ros-shadow-control), 3px 0 8px rgba(0, 0, 0, 0.35);
+}
+
+.ros-start-button:hover,
+.ros-start-button[aria-expanded='true'] {
+  filter: brightness(1.08);
+}
+
+.ros-tray {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.34), transparent 32%),
+    linear-gradient(180deg, #18a7f8, #0b7bd2);
+  border-left: 1px solid rgba(8, 55, 140, 0.65);
+  box-shadow: inset 1px 0 0 rgba(255, 255, 255, 0.32);
+}
+
+.ros-start-menu {
+  color: #111;
+  background: #ffffff;
+  border: 1px solid #0c3e9c;
+  border-radius: var(--ros-menu-radius) var(--ros-menu-radius) 2px 2px;
+  box-shadow: var(--ros-shadow-window);
+}
+
+.ros-start-menu-header,
+.ros-start-menu-footer {
+  color: var(--ros-white);
+  background: linear-gradient(180deg, #2c79f4 0%, #245edb 50%, #174bb9 100%);
+}
+
+.ros-user-picture {
+  color: #234;
+  background: linear-gradient(135deg, #f5f8ff, #b8cef5);
+  border: 2px solid rgba(255, 255, 255, 0.86);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.34);
+}
+
+.ros-user-status {
+  color: #c8ddff;
+}
+
+.ros-start-menu-column-alt {
+  background: #d6e5fb;
+  border-left: 1px solid #b5c9ea;
+}
+
+.ros-menu-item:hover,
+.ros-menu-item:focus-visible {
+  color: var(--ros-white);
+  background: linear-gradient(180deg, #4e8af5, #2364d5);
+  outline: none;
+}
+
+.ros-menu-item:hover small,
+.ros-menu-item:focus-visible small {
+  color: #e8f0ff;
+}
+
+.ros-menu-item-icon {
+  background: linear-gradient(135deg, #fefefe, #9db8e9);
+  border: 1px solid rgba(36, 94, 219, 0.35);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.86);
+}
+
+.ros-menu-item-icon[data-kind='system'] {
+  background: linear-gradient(135deg, #fff4b7, #dd9b28);
+}
+
+.ros-menu-item-icon[data-kind='folder'] {
+  background: linear-gradient(#ffe589 0 35%, #f3b63f 36% 100%);
+}
+
+.ros-taskbar-button-icon[data-tone='folder'],
+.ros-window-title-icon[data-tone='folder'],
+.ros-quick-launch-button[data-tone='folder'] {
+  background: linear-gradient(#ffe589 0 35%, #f3b63f 36% 100%);
+  border: 1px solid rgba(126, 104, 33, 0.45);
+}
+
+.ros-menu-item-icon[data-kind='help'] {
+  background: linear-gradient(135deg, #6cd7ff, #245edb 66%, #14338c);
+}
+
+.ros-menu-item-icon[data-kind='placeholder'] {
+  background: linear-gradient(135deg, #9ee7ff, #245edb 66%, #16358d);
+}
+
+.ros-menu-item-icon[data-kind='computer'],
+.ros-taskbar-button-icon[data-tone='computer'],
+.ros-window-title-icon[data-tone='computer'],
+.ros-quick-launch-button[data-tone='computer'] {
+  background: linear-gradient(#f7f9ff, #a8bddf 52%, #6b7da1 53%);
+  border: 1px solid rgba(12, 45, 102, 0.34);
+}
+
+.ros-menu-item-icon[data-kind='settings'],
+.ros-taskbar-button-icon[data-tone='settings'],
+.ros-window-title-icon[data-tone='settings'],
+.ros-quick-launch-button[data-tone='settings'] {
+  background: linear-gradient(135deg, #fafafa, #91a3c9 58%, #536c9e);
+  border: 1px solid rgba(12, 45, 102, 0.34);
+}
+
+.ros-menu-item-icon[data-kind='notepad'],
+.ros-taskbar-button-icon[data-tone='notepad'],
+.ros-window-title-icon[data-tone='notepad'],
+.ros-quick-launch-button[data-tone='notepad'] {
+  background: linear-gradient(180deg, #ffffff 0 18%, #f7f0c3 19% 100%);
+  border: 1px solid rgba(126, 104, 33, 0.45);
+}
+
+.ros-menu-item-icon[data-kind='terminal'],
+.ros-taskbar-button-icon[data-tone='terminal'],
+.ros-window-title-icon[data-tone='terminal'],
+.ros-quick-launch-button[data-tone='terminal'] {
+  background: linear-gradient(135deg, #273040, #05080c 72%);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+.ros-all-programs-button:hover,
+.ros-all-programs-button:focus-visible {
+  color: var(--ros-white);
+  background: linear-gradient(180deg, #4e8af5, #2364d5);
+  outline: none;
+}
+
+.ros-all-programs-button span {
+  background: linear-gradient(180deg, #7fd56e, #1f8c16);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+.ros-programs-panel {
+  border-top: 1px solid #d8d2bd;
+}
+
+.ros-session-button {
+  background: linear-gradient(180deg, #ffb45b, #df6d1d);
+  box-shadow: var(--ros-shadow-control);
+}
+
+.ros-session-button-danger {
+  background: linear-gradient(180deg, #f86a5c, #c92f23);
+}
+
+.ros-taskbar-button {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.32), transparent 46%),
+    linear-gradient(180deg, #3d7ff0, #1d56c7);
+  border: 1px solid rgba(8, 45, 127, 0.56);
+  box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.28), inset -1px -1px 0 rgba(0, 0, 0, 0.18);
+}
+
+.ros-taskbar-button:hover,
+.ros-taskbar-button[data-active='true'] {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.44), transparent 42%),
+    linear-gradient(180deg, #5f91f0, #2a62ce);
+}
+
+.ros-taskbar-button[data-minimized='true'] {
+  opacity: 0.78;
+}
+
+.ros-quick-launch {
+  border-right: 1px solid rgba(8, 45, 127, 0.56);
+  box-shadow: inset 1px 0 0 rgba(255, 255, 255, 0.22);
+}
+
+.ros-quick-launch-button {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.3), transparent 48%),
+    linear-gradient(180deg, #2e78f2, #1748b8);
+  border: 1px solid rgba(255, 255, 255, 0.38);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.36);
+}
+
+.ros-quick-launch-button:hover,
+.ros-quick-launch-button:focus-visible {
+  filter: brightness(1.16);
+  outline: none;
+}
+
+.ros-window {
+  background: #ece9d8;
+  border: 3px solid #0f4bc8;
+  border-radius: 7px 7px 3px 3px;
+  box-shadow: var(--ros-shadow-window);
+  animation: ros-window-enter 120ms ease-out;
+}
+
+.ros-window[data-active='false'] {
+  border-color: #6f91d8;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.26);
+}
+
+.ros-window[data-maximized='true'] {
+  border-radius: 0;
+  border-width: 2px;
+}
+
+.ros-window-titlebar {
+  cursor: move;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.55), transparent 26%),
+    linear-gradient(90deg, #07359c 0%, #1f65e9 54%, #77a7ff 100%);
+}
+
+.ros-window[data-active='false'] .ros-window-titlebar {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.36), transparent 28%),
+    linear-gradient(90deg, #6f84b8 0%, #8aa4dd 100%);
+}
+
+.ros-window[data-maximized='true'] .ros-window-titlebar {
+  cursor: default;
+}
+
+.ros-window-body {
+  background: #fff;
+  border-top: 1px solid #083896;
+}
+
+.ros-window-control {
+  background:
+    radial-gradient(circle at 30% 22%, rgba(255, 255, 255, 0.86), transparent 31%),
+    linear-gradient(180deg, #65a0ff 0%, #1d55d6 58%, #0c348f 100%);
+  box-shadow: inset -1px -1px 0 rgba(0, 0, 0, 0.3);
+}
+
+.ros-window-control:hover {
+  filter: brightness(1.12);
+}
+
+.ros-window-control-close {
+  background:
+    radial-gradient(circle at 30% 22%, rgba(255, 255, 255, 0.86), transparent 31%),
+    linear-gradient(180deg, #ff9c6d 0%, #e34a1f 58%, #9d1b0d 100%);
+}
+
+.ros-app-toolbar {
+  background: linear-gradient(180deg, #f6f4e9, #e5dfca);
+  border-bottom: 1px solid #c6bea4;
+}
+
+.ros-app-toolbar-button {
+  background: linear-gradient(180deg, #ffffff, #e8e4d5);
+  border: 1px solid #a9a391;
+}
+
+.ros-computer-sidebar {
+  background: linear-gradient(180deg, #7ea2e6, #d7e4ff);
+  border-right: 1px solid #91a3c9;
+}
+
+.ros-sidebar-panel {
+  background: rgba(255, 255, 255, 0.68);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75);
+}
+
+.ros-sidebar-panel button:hover,
+.ros-sidebar-panel button:focus-visible {
+  color: #0d318b;
+  text-decoration: underline;
+}
+
+.ros-computer-content {
+  background: linear-gradient(180deg, #ffffff, #f6f8ff);
+}
+
+.ros-computer-item:hover,
+.ros-computer-item:focus-visible {
+  background: #dfeafe;
+  outline: 1px solid #7aa6ee;
+}
+
+.ros-computer-item-icon {
+  border: 1px solid rgba(36, 94, 219, 0.35);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.86);
+}
+
+.ros-computer-item-icon[data-tone='drive'] {
+  background: linear-gradient(#f6f7f9, #a4b2c5 68%, #66758a);
+}
+
+.ros-computer-item-icon[data-tone='folder'] {
+  background: linear-gradient(#ffe589 0 35%, #f3b63f 36% 100%);
+}
+
+.ros-computer-item-icon[data-tone='settings'] {
+  background: linear-gradient(135deg, #fafafa, #91a3c9 58%, #536c9e);
+}
+
+.ros-computer-item-icon[data-tone='network'] {
+  background: linear-gradient(135deg, #9ee7ff, #245edb 66%, #16358d);
+}
+
+.ros-explorer-address {
+  background: linear-gradient(180deg, #f6f4e9, #e5dfca);
+  border-bottom: 1px solid #c6bea4;
+}
+
+.ros-explorer-address strong {
+  background: #ffffff;
+  border: 1px solid #9faabf;
+  box-shadow: inset 1px 1px 2px rgba(0, 0, 0, 0.12);
+}
+
+.ros-file-tree {
+  background: linear-gradient(180deg, #d7e4ff, #eef4ff);
+  border-right: 1px solid #9eb7df;
+}
+
+.ros-file-tree-item:hover,
+.ros-file-tree-item:focus-visible,
+.ros-file-tree-item[data-active='true'] {
+  background: #dfeafe;
+  outline: 1px solid #7aa6ee;
+}
+
+.ros-file-list {
+  background: #ffffff;
+}
+
+.ros-file-row:hover,
+.ros-file-row:focus-visible,
+.ros-file-row[data-selected='true'] {
+  color: var(--ros-white);
+  background: linear-gradient(180deg, #4e8af5, #2364d5);
+  outline: none;
+}
+
+.ros-file-details {
+  background: linear-gradient(180deg, #ffffff, #eef4ff);
+  border-left: 1px solid #c5d3ec;
+}
+
+.ros-file-details pre {
+  background: #fffef7;
+  border: 1px solid #c5d3ec;
+}
+
+.ros-file-node-icon[data-type='folder'] {
+  background: linear-gradient(#ffe589 0 35%, #f3b63f 36% 100%);
+  border: 1px solid rgba(126, 104, 33, 0.45);
+}
+
+.ros-file-node-icon[data-type='file'] {
+  background:
+    linear-gradient(135deg, transparent 0 70%, #d4e0f4 71% 100%),
+    linear-gradient(180deg, #ffffff, #f7f0c3);
+  border: 1px solid rgba(126, 104, 33, 0.45);
+}
+
+.ros-settings-section {
+  background: linear-gradient(180deg, #ffffff, #f6f8ff);
+}
+
+.ros-properties-app {
+  background: linear-gradient(180deg, #ffffff, #f6f8ff);
+}
+
+.ros-properties-header {
+  border-bottom: 1px solid #c5d3ec;
+}
+
+.ros-properties-icon {
+  border: 1px solid rgba(36, 94, 219, 0.35);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.86);
+}
+
+.ros-properties-icon[data-tone='computer'] {
+  background: linear-gradient(#f7f9ff, #a8bddf 52%, #6b7da1 53%);
+}
+
+.ros-properties-icon[data-tone='folder'] {
+  background: linear-gradient(#ffe589 0 35%, #f3b63f 36% 100%);
+}
+
+.ros-properties-icon[data-tone='screen'] {
+  background: linear-gradient(#91d2ff, #245edb 68%, #1a337d 69%);
+}
+
+.ros-properties-icon[data-tone='settings'] {
+  background: linear-gradient(135deg, #fafafa, #91a3c9 58%, #536c9e);
+}
+
+.ros-properties-icon[data-tone='notepad'] {
+  background: linear-gradient(180deg, #ffffff 0 18%, #f7f0c3 19% 100%);
+}
+
+.ros-properties-list div {
+  border-bottom: 1px solid #edf2fb;
+}
+
+.ros-settings-tabs button {
+  background: linear-gradient(180deg, #ffffff, #dce7fb);
+  border: 1px solid #9eb7df;
+}
+
+.ros-settings-tabs button[aria-selected='true'] {
+  background: #ffffff;
+  border-bottom-color: #ffffff;
+}
+
+.ros-wallpaper-option,
+.ros-toggle-row {
+  background: #f8fbff;
+  border: 1px solid #b6c8e8;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.ros-wallpaper-option:hover,
+.ros-wallpaper-option:focus-visible,
+.ros-toggle-row:hover,
+.ros-toggle-row:focus-visible,
+.ros-wallpaper-option[data-active='true'] {
+  background: #dfeafe;
+  border-color: #6f9eea;
+  outline: none;
+}
+
+.ros-wallpaper-preview {
+  border: 1px solid #8096bd;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
+}
+
+.ros-wallpaper-preview[data-wallpaper='bliss'] {
+  background: linear-gradient(180deg, #63b6ff 0 52%, #62c64d 53% 100%);
+}
+
+.ros-wallpaper-preview[data-wallpaper='azul'] {
+  background: linear-gradient(135deg, #0b4fc4, #25a3f5 54%, #0854b8);
+}
+
+.ros-wallpaper-preview[data-wallpaper='plata'] {
+  background: linear-gradient(135deg, #dce4f2, #99abc7 48%, #647792);
+}
+
+.ros-toggle-switch {
+  background: linear-gradient(180deg, #b7c1d4, #73839c);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.34);
+}
+
+.ros-toggle-row[data-active='true'] .ros-toggle-switch {
+  background: linear-gradient(180deg, #76d36a, #1f8c16);
+}
+
+.ros-toggle-switch::after {
+  background: linear-gradient(180deg, #ffffff, #cfd8e8);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+.ros-system-info div {
+  background: #f8fbff;
+  border: 1px solid #b6c8e8;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.ros-notepad-editor {
+  background:
+    repeating-linear-gradient(180deg, transparent 0 18px, rgba(118, 154, 214, 0.1) 19px),
+    #fffef7;
+}
+
+.ros-notepad-status {
+  background: linear-gradient(180deg, #f6f4e9, #e5dfca);
+  border-top: 1px solid #c6bea4;
+}
+
+.ros-terminal-app {
+  background:
+    radial-gradient(circle at 12% 12%, rgba(69, 255, 129, 0.1), transparent 32%),
+    #05080c;
+}
+
+@keyframes ros-window-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
