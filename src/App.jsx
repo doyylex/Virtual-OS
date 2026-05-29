@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { Desktop } from './components/Desktop.jsx';
+import { SystemDialogs } from './components/SystemDialogs.jsx';
 import { Taskbar } from './components/Taskbar.jsx';
 import { useDesktopLayoutStore } from './store/useDesktopLayoutStore.js';
 import { useFileSystemStore } from './store/useFileSystemStore.js';
@@ -33,6 +34,7 @@ export default function App() {
     <div className="ros-root">
       <Desktop />
       <Taskbar />
+      <SystemDialogs />
     </div>
   );
 }

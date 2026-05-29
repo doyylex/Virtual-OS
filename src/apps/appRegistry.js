@@ -10,7 +10,7 @@ export const appRegistry = [
     id: 'explorer',
     title: 'Explorador',
     description: 'Carpetas y archivos persistentes.',
-    iconTone: 'folder',
+    iconTone: 'explorer',
     component: FileExplorerApp,
     defaultPosition: { x: 176, y: 92 },
     defaultSize: { width: 720, height: 460 },

@@ -38,6 +38,43 @@
   text-shadow: none;
 }
 
+.ros-inline-rename-field,
+.ros-extension-field {
+  display: inline-flex;
+  align-items: stretch;
+  min-width: 0;
+  max-width: 100%;
+  color: #111;
+  text-shadow: none;
+}
+
+.ros-desktop-rename-field {
+  width: 76px;
+  margin-top: 4px;
+}
+
+.ros-inline-rename-field input,
+.ros-extension-field input {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.ros-inline-rename-field .ros-desktop-icon-input {
+  width: auto;
+  margin-top: 0;
+}
+
+.ros-extension-suffix {
+  display: inline-grid;
+  flex: 0 0 auto;
+  place-items: center;
+  min-height: 100%;
+  padding: 1px 4px;
+  font-size: inherit;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
 .ros-icon-shell {
   position: relative;
   display: grid;
@@ -85,6 +122,241 @@
 .ros-context-menu-separator {
   height: 1px;
   margin: 3px 2px 3px 24px;
+}
+
+.ros-window-system-menu {
+  position: fixed;
+  min-width: 164px;
+  padding: 2px;
+  color: #111;
+  font-size: 12px;
+}
+
+.ros-window-system-menu-item {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  align-items: center;
+  gap: 3px;
+  width: 100%;
+  min-height: 24px;
+  padding: 3px 20px 3px 4px;
+  color: inherit;
+  background: transparent;
+  text-align: left;
+}
+
+.ros-window-system-menu-item span {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 18px;
+  min-height: 16px;
+  font-size: 11px;
+  line-height: 1;
+}
+
+.ros-window-system-menu-separator {
+  display: block;
+  height: 1px;
+  margin: 3px 2px 3px 24px;
+}
+
+.ros-system-dialog-layer {
+  position: fixed;
+  z-index: 80;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.ros-system-dialog-shell {
+  display: flex;
+  flex-direction: column;
+  width: min(420px, calc(100vw - 30px));
+  max-height: calc(100dvh - 80px);
+  overflow: hidden;
+  color: #111;
+  font-size: 12px;
+}
+
+.ros-system-dialog-shell[data-kind='saveFile'] {
+  width: min(520px, calc(100vw - 30px));
+}
+
+.ros-system-dialog-titlebar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 22px;
+  align-items: center;
+  gap: 8px;
+  min-height: 29px;
+  padding: 3px 4px 3px 8px;
+  color: var(--ros-white);
+  font-weight: 700;
+}
+
+.ros-system-dialog-titlebar span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ros-system-dialog-close {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  color: var(--ros-white);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.ros-system-dialog-body {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  gap: 12px;
+  min-height: 88px;
+  padding: 18px 18px 12px;
+  overflow: auto;
+}
+
+.ros-system-dialog-icon {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.ros-system-dialog-icon::before {
+  content: 'i';
+}
+
+.ros-system-dialog-icon[data-icon='question']::before {
+  content: '?';
+}
+
+.ros-system-dialog-icon[data-icon='warning']::before {
+  content: '!';
+}
+
+.ros-system-dialog-content {
+  min-width: 0;
+}
+
+.ros-system-dialog-content p {
+  line-height: 1.35;
+}
+
+.ros-system-dialog-content small {
+  display: block;
+  margin-top: 7px;
+  color: #4d5e78;
+  line-height: 1.35;
+}
+
+.ros-system-dialog-content em {
+  display: block;
+  margin-top: 6px;
+  color: #9d1b0d;
+  font-style: normal;
+}
+
+.ros-system-dialog-field {
+  display: grid;
+  gap: 5px;
+  margin-top: 12px;
+}
+
+.ros-system-dialog-field span {
+  color: #303a4f;
+  font-weight: 700;
+}
+
+.ros-system-dialog-field input {
+  width: 100%;
+  min-width: 0;
+  height: 24px;
+  padding: 2px 6px;
+  color: #111;
+  font: inherit;
+}
+
+.ros-system-dialog-field .ros-extension-field {
+  width: 100%;
+  color: #111;
+  font-weight: 400;
+}
+
+.ros-system-dialog-field .ros-extension-suffix {
+  font-weight: 400;
+}
+
+.ros-save-file-picker {
+  display: grid;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.ros-save-file-picker > span {
+  color: #303a4f;
+  font-weight: 700;
+}
+
+.ros-save-file-tree {
+  display: grid;
+  max-height: 188px;
+  overflow: auto;
+  padding: 5px;
+}
+
+.ros-save-file-folder {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  align-items: center;
+  gap: 7px;
+  min-height: 28px;
+  padding: 3px 6px 3px calc(6px + var(--ros-folder-depth, 0) * 16px);
+  color: #111;
+  background: transparent;
+  text-align: left;
+}
+
+.ros-save-file-folder span:last-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ros-save-file-picker small {
+  display: block;
+  margin-top: 0;
+  color: #4d5e78;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ros-system-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 10px 14px 13px;
+}
+
+.ros-system-dialog-button {
+  min-width: 82px;
+  min-height: 24px;
+  padding: 2px 12px;
+  color: #111;
+  font-size: 12px;
 }
 
 .ros-start-button {
@@ -289,6 +561,20 @@
   border-radius: 2px;
 }
 
+.ros-window-title-icon-button {
+  position: relative;
+  z-index: 5;
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  padding: 1px;
+  background: transparent;
+  border: 0;
+  border-radius: 2px;
+  cursor: default;
+}
+
 .ros-taskbar-button-label,
 .ros-window-title {
   min-width: 0;
@@ -460,6 +746,41 @@
   font-size: 12px;
 }
 
+.ros-app-toolbar-separator {
+  width: 1px;
+  height: 22px;
+  margin: 0 2px;
+}
+
+.ros-explorer-nav-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 74px;
+}
+
+.ros-explorer-nav-button span {
+  display: grid;
+  place-items: center;
+  width: 14px;
+  height: 14px;
+  font-size: 11px;
+  line-height: 1;
+}
+
+.ros-explorer-toolbar-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  min-width: 0;
+}
+
+.ros-explorer-toggle-button {
+  min-width: 0;
+  padding-inline: 7px;
+  white-space: nowrap;
+}
+
 .ros-computer-sidebar {
   padding: 10px;
 }
@@ -558,10 +879,25 @@
   font-size: 12px;
 }
 
-.ros-explorer-address strong {
+.ros-explorer-address-label {
+  font-weight: 700;
+}
+
+.ros-explorer-address-box {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  gap: 6px;
+  align-items: center;
   min-width: 0;
   overflow: hidden;
-  padding: 3px 7px;
+  min-height: 23px;
+  padding: 2px 7px;
+}
+
+.ros-explorer-address-box strong {
+  min-width: 0;
+  overflow: hidden;
+  font-weight: 400;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -571,6 +907,7 @@
   flex-direction: column;
   gap: 3px;
   padding: 8px;
+  user-select: none;
 }
 
 .ros-file-tree-item {
@@ -588,9 +925,49 @@
 
 .ros-file-list {
   padding: 8px;
+  user-select: none;
+}
+
+.ros-file-items[data-view-mode='details'] {
+  display: grid;
+  gap: 1px;
+}
+
+.ros-file-items[data-view-mode='list'] {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(178px, 1fr));
+  align-content: start;
+  gap: 3px 8px;
+}
+
+.ros-file-items[data-view-mode='icons'] {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(82px, 92px));
+  align-content: start;
+  gap: 10px 8px;
+}
+
+.ros-file-list-header {
+  display: grid;
+  grid-template-columns: 24px minmax(120px, 1fr) 112px 128px;
+  align-items: center;
+  gap: 8px;
+  min-height: 24px;
+  margin-bottom: 2px;
+  padding: 0 6px;
+  font-size: 11px;
+}
+
+.ros-file-list-header button {
+  min-width: 0;
+  padding: 3px 4px;
+  color: #233a68;
+  background: transparent;
+  text-align: left;
 }
 
 .ros-file-row {
+  appearance: none;
   display: grid;
   grid-template-columns: 24px minmax(120px, 1fr) 112px 128px;
   align-items: center;
@@ -603,10 +980,86 @@
   border-radius: 2px;
   font-size: 12px;
   text-align: left;
+  user-select: none;
+}
+
+.ros-file-row[data-view-mode='list'] {
+  grid-template-columns: 24px minmax(0, 1fr);
+  min-height: 30px;
+}
+
+.ros-file-row[data-view-mode='icons'] {
+  grid-template-columns: 1fr;
+  justify-items: center;
+  align-content: start;
+  width: 82px;
+  min-height: 86px;
+  padding: 6px 4px;
+  text-align: center;
+}
+
+.ros-file-row[data-view-mode='icons'] .ros-file-node-icon {
+  width: 34px;
+  height: 34px;
 }
 
 .ros-file-row-name,
 .ros-file-row span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ros-file-row[data-view-mode='icons'] .ros-file-row-name {
+  width: 74px;
+  margin-top: 4px;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.ros-file-row .ros-inline-rename-field,
+.ros-file-row .ros-extension-suffix {
+  overflow: visible;
+  text-overflow: clip;
+  white-space: nowrap;
+}
+
+.ros-file-row[data-view-mode='icons'] .ros-inline-rename-field {
+  width: 74px;
+}
+
+.ros-file-row[data-view-mode='list'] .ros-file-row-type,
+.ros-file-row[data-view-mode='list'] .ros-file-row-date,
+.ros-file-row[data-view-mode='icons'] .ros-file-row-type,
+.ros-file-row[data-view-mode='icons'] .ros-file-row-date {
+  display: none;
+}
+
+.ros-file-row-input {
+  width: 100%;
+  min-width: 0;
+  padding: 1px 4px;
+  color: #111;
+  font: inherit;
+  line-height: 1.2;
+}
+
+.ros-file-drag-preview {
+  position: fixed;
+  z-index: 10000;
+  display: inline-grid;
+  grid-template-columns: 20px minmax(0, 160px);
+  gap: 6px;
+  align-items: center;
+  max-width: 220px;
+  min-height: 28px;
+  padding: 4px 8px;
+  pointer-events: none;
+  transform: translate(10px, 10px);
+}
+
+.ros-file-drag-preview span:last-child {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -628,12 +1081,15 @@
 .ros-file-details {
   padding: 12px;
   color: #111;
+  user-select: none;
 }
 
 .ros-file-details h2 {
   margin-top: 9px;
   color: #1e4792;
   font-size: 15px;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
 }
 
 .ros-file-details p {
@@ -641,18 +1097,90 @@
   color: #52627c;
 }
 
+.ros-file-details-list {
+  display: grid;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.ros-file-details-list div {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.ros-file-details-list dt {
+  color: #1e4792;
+  font-weight: 700;
+}
+
+.ros-file-details-list dd {
+  min-width: 0;
+  overflow: hidden;
+  color: #3f4f68;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ros-file-preview {
+  margin-top: 12px;
+}
+
+.ros-file-preview h3 {
+  color: #1e4792;
+  font-size: 12px;
+}
+
 .ros-file-details pre {
+  max-width: 100%;
   max-height: 170px;
   margin: 10px 0 0;
   overflow: auto;
   padding: 8px;
   border-radius: 4px;
+  overflow-wrap: anywhere;
+  user-select: text;
+  word-break: break-word;
   white-space: pre-wrap;
 }
 
 .ros-empty-folder {
-  margin: 8px;
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  max-width: 360px;
+  margin: 34px auto;
+  padding: 18px;
   color: #69758a;
+  text-align: center;
+}
+
+.ros-empty-folder h2 {
+  color: #1e4792;
+  font-size: 17px;
+  font-weight: 400;
+}
+
+.ros-empty-folder p {
+  line-height: 1.35;
+}
+
+.ros-empty-folder-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 5px;
+}
+
+.ros-empty-folder-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 3px;
+}
+
+.ros-file-details-help {
+  margin-top: 13px;
 }
 
 .ros-settings-section {

@@ -5,6 +5,9 @@ const DESKTOP_TASKBAR_OFFSET = 40;
 const TITLEBAR_VISIBLE_WIDTH = 140;
 const TITLEBAR_VISIBLE_HEIGHT = 32;
 const WINDOW_MARGIN = 8;
+const TRANSITION_IDLE = 'idle';
+const TRANSITION_MINIMIZING = 'minimizing';
+const TRANSITION_RESTORING = 'restoring';
 
 const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
 
@@ -57,6 +60,10 @@ const bringToFront = (windowId, state, launchData) => {
             ...windowItem,
             zIndex: nextZIndex,
             isMinimized: false,
+            transitionState:
+              windowItem.isMinimized || windowItem.transitionState === TRANSITION_MINIMIZING
+                ? TRANSITION_RESTORING
+                : TRANSITION_IDLE,
             launchData: shouldUpdateLaunchData ? launchData : windowItem.launchData,
             launchToken: shouldUpdateLaunchData ? nextLaunchToken : windowItem.launchToken,
           }
@@ -66,7 +73,9 @@ const bringToFront = (windowId, state, launchData) => {
 };
 
 const getNextActiveWindowId = (windows) => {
-  const visibleWindows = windows.filter((windowItem) => !windowItem.isMinimized);
+  const visibleWindows = windows.filter(
+    (windowItem) => !windowItem.isMinimized && windowItem.transitionState !== TRANSITION_MINIMIZING,
+  );
 
   if (visibleWindows.length === 0) {
     return null;
@@ -75,6 +84,78 @@ const getNextActiveWindowId = (windows) => {
   return visibleWindows.reduce((topWindow, windowItem) =>
     windowItem.zIndex > topWindow.zIndex ? windowItem : topWindow,
   ).id;
+};
+
+const minimizeWindowInState = (windowId, state) => {
+  const targetWindow = state.windows.find((windowItem) => windowItem.id === windowId);
+
+  if (!targetWindow || targetWindow.isMinimized || targetWindow.transitionState === TRANSITION_MINIMIZING) {
+    return state;
+  }
+
+  const nextWindows = state.windows.map((windowItem) =>
+    windowItem.id === windowId
+      ? { ...windowItem, isMinimized: false, transitionState: TRANSITION_MINIMIZING }
+      : windowItem,
+  );
+
+  return {
+    windows: nextWindows,
+    activeWindowId: state.activeWindowId === windowId ? getNextActiveWindowId(nextWindows) : state.activeWindowId,
+  };
+};
+
+const restoreWindowInState = (windowId, state) => {
+  const targetWindow = state.windows.find((windowItem) => windowItem.id === windowId);
+
+  if (!targetWindow) {
+    return state;
+  }
+
+  const nextZIndex = state.zCounter + 1;
+
+  return {
+    zCounter: nextZIndex,
+    activeWindowId: windowId,
+    windows: state.windows.map((windowItem) => {
+      if (windowItem.id !== windowId) {
+        return windowItem;
+      }
+
+      if (windowItem.isMinimized || windowItem.transitionState === TRANSITION_MINIMIZING) {
+        return {
+          ...windowItem,
+          zIndex: nextZIndex,
+          isMinimized: false,
+          transitionState: TRANSITION_RESTORING,
+        };
+      }
+
+      if (windowItem.isMaximized) {
+        const restoredSize = windowItem.previousSize ?? windowItem.size;
+        const restoredPosition = constrainPosition(windowItem.previousPosition ?? windowItem.position, restoredSize);
+
+        return {
+          ...windowItem,
+          position: restoredPosition,
+          size: restoredSize,
+          previousPosition: null,
+          previousSize: null,
+          zIndex: nextZIndex,
+          isMinimized: false,
+          isMaximized: false,
+          transitionState: TRANSITION_IDLE,
+        };
+      }
+
+      return {
+        ...windowItem,
+        zIndex: nextZIndex,
+        isMinimized: false,
+        transitionState: TRANSITION_IDLE,
+      };
+    }),
+  };
 };
 
 export const useWindowStore = create((set) => ({
@@ -120,6 +201,7 @@ export const useWindowStore = create((set) => ({
             zIndex: nextZIndex,
             isMinimized: false,
             isMaximized: false,
+            transitionState: TRANSITION_RESTORING,
             launchData: launchData ?? null,
             launchToken: nextLaunchToken,
           },
@@ -137,28 +219,38 @@ export const useWindowStore = create((set) => ({
       };
     }),
 
+  setWindowTitle: (windowId, title) =>
+    set((state) => {
+      const targetWindow = state.windows.find((windowItem) => windowItem.id === windowId);
+
+      if (!targetWindow || targetWindow.title === title) {
+        return state;
+      }
+
+      return {
+        windows: state.windows.map((windowItem) =>
+          windowItem.id === windowId ? { ...windowItem, title } : windowItem,
+        ),
+      };
+    }),
+
   focusWindow: (windowId) =>
     set((state) => {
       const targetWindow = state.windows.find((windowItem) => windowItem.id === windowId);
 
-      if (!targetWindow || state.activeWindowId === windowId) {
+      if (
+        !targetWindow ||
+        (state.activeWindowId === windowId &&
+          !targetWindow.isMinimized &&
+          targetWindow.transitionState !== TRANSITION_MINIMIZING)
+      ) {
         return state;
       }
 
       return bringToFront(windowId, state);
     }),
 
-  minimizeWindow: (windowId) =>
-    set((state) => {
-      const nextWindows = state.windows.map((windowItem) =>
-        windowItem.id === windowId ? { ...windowItem, isMinimized: true } : windowItem,
-      );
-
-      return {
-        windows: nextWindows,
-        activeWindowId: state.activeWindowId === windowId ? getNextActiveWindowId(nextWindows) : state.activeWindowId,
-      };
-    }),
+  minimizeWindow: (windowId) => set((state) => minimizeWindowInState(windowId, state)),
 
   maximizeWindow: (windowId) =>
     set((state) => {
@@ -179,38 +271,60 @@ export const useWindowStore = create((set) => ({
                 zIndex: nextZIndex,
                 isMinimized: false,
                 isMaximized: true,
+                transitionState: TRANSITION_IDLE,
               }
             : windowItem,
         ),
       };
     }),
 
-  restoreWindow: (windowId) =>
+  restoreWindow: (windowId) => set((state) => restoreWindowInState(windowId, state)),
+
+  toggleTaskbarWindow: (windowId) =>
     set((state) => {
-      const nextZIndex = state.zCounter + 1;
+      const targetWindow = state.windows.find((windowItem) => windowItem.id === windowId);
 
-      return {
-        zCounter: nextZIndex,
-        activeWindowId: windowId,
-        windows: state.windows.map((windowItem) => {
-          if (windowItem.id !== windowId) {
-            return windowItem;
-          }
+      if (!targetWindow) {
+        return state;
+      }
 
-          const restoredSize = windowItem.previousSize ?? windowItem.size;
-          const restoredPosition = constrainPosition(windowItem.previousPosition ?? windowItem.position, restoredSize);
+      if (targetWindow.isMinimized || targetWindow.transitionState === TRANSITION_MINIMIZING) {
+        return restoreWindowInState(windowId, state);
+      }
 
+      if (state.activeWindowId === windowId) {
+        return minimizeWindowInState(windowId, state);
+      }
+
+      return bringToFront(windowId, state);
+    }),
+
+  finishWindowTransition: (windowId, transitionState) =>
+    set((state) => {
+      let didMinimizeActiveWindow = false;
+      const nextWindows = state.windows.map((windowItem) => {
+        if (windowItem.id !== windowId || windowItem.transitionState !== transitionState) {
+          return windowItem;
+        }
+
+        if (transitionState === TRANSITION_MINIMIZING) {
+          didMinimizeActiveWindow = state.activeWindowId === windowId;
           return {
             ...windowItem,
-            position: restoredPosition,
-            size: restoredSize,
-            previousPosition: null,
-            previousSize: null,
-            zIndex: nextZIndex,
-            isMinimized: false,
-            isMaximized: false,
+            isMinimized: true,
+            transitionState: TRANSITION_IDLE,
           };
-        }),
+        }
+
+        return {
+          ...windowItem,
+          transitionState: TRANSITION_IDLE,
+        };
+      });
+
+      return {
+        windows: nextWindows,
+        activeWindowId: didMinimizeActiveWindow ? getNextActiveWindowId(nextWindows) : state.activeWindowId,
       };
     }),
 
@@ -218,7 +332,7 @@ export const useWindowStore = create((set) => ({
     set((state) => ({
       windows: state.windows.map((windowItem) =>
         windowItem.id === windowId && !windowItem.isMaximized
-          ? { ...windowItem, position: constrainPosition(position, windowItem.size) }
+          ? { ...windowItem, position: constrainPosition(position, windowItem.size), transitionState: TRANSITION_IDLE }
           : windowItem,
       ),
     })),
@@ -241,6 +355,7 @@ export const useWindowStore = create((set) => ({
           ...windowItem,
           position: nextGeometry.position,
           size: nextGeometry.size,
+          transitionState: TRANSITION_IDLE,
         };
       }),
     })),

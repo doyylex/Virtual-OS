@@ -5,7 +5,7 @@ const computerItems = [
   { label: 'Disco local (C:)', detail: 'Sistema de Roso OS', tone: 'drive', appId: 'explorer', launchData: { folderId: 'root' } },
   { label: 'Escritorio', detail: 'Archivos visibles en el desktop', tone: 'folder', appId: 'explorer', launchData: { folderId: 'desktop-folder' } },
   { label: 'Mis documentos', detail: 'Archivos persistentes', tone: 'folder', appId: 'explorer', launchData: { folderId: 'documents' } },
-  { label: 'Explorador', detail: 'Carpetas y archivos', tone: 'folder', appId: 'explorer' },
+  { label: 'Explorador', detail: 'Carpetas y archivos', tone: 'explorer', appId: 'explorer' },
   { label: 'Bloc de notas', detail: 'Editor con guardado local', tone: 'notepad', appId: 'notepad' },
   { label: 'Terminal', detail: 'Comandos fake', tone: 'terminal', appId: 'terminal' },
   { label: 'Panel de control', detail: 'Wallpapers y sonido', tone: 'settings', appId: 'settings' },

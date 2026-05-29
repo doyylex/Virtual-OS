@@ -1,9 +1,12 @@
+import { stripLockedExtension } from '../services/fileNames.js';
+
 export function DesktopIcon({
   draftName,
   isDragging,
   isEditing,
   isSelected,
   label,
+  dropFolderId,
   onContextMenu,
   onFocus,
   onKeyDown,
@@ -14,6 +17,7 @@ export function DesktopIcon({
   onRenameKeyDown,
   onSelect,
   position,
+  renameExtension = '',
   tone,
 }) {
   return (
@@ -21,6 +25,7 @@ export function DesktopIcon({
       className="ros-desktop-icon"
       data-dragging={isDragging ? 'true' : 'false'}
       data-editing={isEditing ? 'true' : 'false'}
+      data-drop-folder-id={dropFolderId}
       data-selected={isSelected ? 'true' : 'false'}
       type="button"
       style={{
@@ -39,20 +44,23 @@ export function DesktopIcon({
         <span className="ros-icon-mark" />
       </span>
       {isEditing ? (
-        <input
-          className="ros-desktop-icon-input"
-          value={draftName}
-          autoFocus
-          spellCheck="false"
-          aria-label={`Renombrar ${label}`}
-          onBlur={onRenameBlur}
-          onChange={(event) => onRenameChange(event.target.value)}
-          onClick={(event) => event.stopPropagation()}
-          onDoubleClick={(event) => event.stopPropagation()}
-          onFocus={(event) => event.target.select()}
-          onKeyDown={onRenameKeyDown}
-          onPointerDown={(event) => event.stopPropagation()}
-        />
+        <span className="ros-inline-rename-field ros-desktop-rename-field">
+          <input
+            className="ros-desktop-icon-input"
+            value={draftName}
+            autoFocus
+            spellCheck="false"
+            aria-label={`Renombrar ${label}`}
+            onBlur={onRenameBlur}
+            onChange={(event) => onRenameChange(stripLockedExtension(event.target.value, renameExtension))}
+            onClick={(event) => event.stopPropagation()}
+            onDoubleClick={(event) => event.stopPropagation()}
+            onFocus={(event) => event.target.select()}
+            onKeyDown={onRenameKeyDown}
+            onPointerDown={(event) => event.stopPropagation()}
+          />
+          {renameExtension ? <span className="ros-extension-suffix">{renameExtension}</span> : null}
+        </span>
       ) : (
         <span className="ros-desktop-icon-label">{label}</span>
       )}

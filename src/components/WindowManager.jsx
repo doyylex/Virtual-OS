@@ -4,7 +4,9 @@ import { WindowFrame } from './WindowFrame.jsx';
 
 export function WindowManager() {
   const windows = useWindowStore((state) => state.windows);
-  const visibleWindows = windows.filter((windowItem) => !windowItem.isMinimized);
+  const visibleWindows = windows.filter(
+    (windowItem) => !windowItem.isMinimized || windowItem.transitionState === 'minimizing',
+  );
 
   return (
     <div className="ros-window-stage" aria-label="Ventanas abiertas">
@@ -19,7 +21,12 @@ export function WindowManager() {
 
         return (
           <WindowFrame app={app} key={windowItem.id} windowItem={windowItem}>
-            <AppComponent key={`${windowItem.id}-${windowItem.launchToken}`} launchData={windowItem.launchData} />
+            <AppComponent
+              appTitle={app.title}
+              key={`${windowItem.id}-${windowItem.launchToken}`}
+              launchData={windowItem.launchData}
+              windowId={windowItem.id}
+            />
           </WindowFrame>
         );
       })}

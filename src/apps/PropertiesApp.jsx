@@ -1,16 +1,10 @@
 import { useMemo } from 'react';
 import { useFileSystemStore } from '../store/useFileSystemStore.js';
+import { formatShortDateTime } from '../services/dateFormat.js';
+import { getExplorerNodeIconType } from '../services/fileIcons.js';
+import { getOriginalLocationLabel, getPathLabel, getTrashRootNode, isPathInsideTrash } from '../services/trashPaths.js';
 
-const formatDate = (timestamp) =>
-  timestamp
-    ? new Intl.DateTimeFormat('es-AR', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      }).format(new Date(timestamp))
-    : 'Sistema';
+const recycleBinFolderId = 'recycle-bin-folder';
 
 const getFileSize = (node) => {
   if (node?.type !== 'file') {
@@ -29,18 +23,35 @@ export function PropertiesApp({ launchData }) {
   const details = useMemo(() => {
     if (node) {
       const path = getPath(node.id);
+      const trashItemCount = nodes.filter((candidateNode) => candidateNode.parentId === recycleBinFolderId).length;
       const childrenCount = nodes.filter((candidateNode) => candidateNode.parentId === node.id).length;
       const size = getFileSize(node);
+      const isInTrash = node.id !== recycleBinFolderId && isPathInsideTrash(path);
+      const trashRootNode = isInTrash ? getTrashRootNode(nodes, node.id) : null;
 
       return {
         title: node.name,
-        type: node.type === 'folder' ? 'Carpeta' : 'Archivo de texto',
-        location: path.slice(0, -1).map((pathNode) => pathNode.name).join('\\') || 'Escritorio',
-        createdAt: formatDate(node.createdAt),
-        updatedAt: formatDate(node.updatedAt),
+        type: isInTrash ? 'Elemento en Papelera' : node.type === 'folder' ? 'Carpeta' : 'Archivo de texto',
+        location: getPathLabel(path.slice(0, -1), 'Escritorio'),
+        createdAt: formatShortDateTime(node.createdAt, 'Sistema'),
+        updatedAt: formatShortDateTime(node.updatedAt, 'Sistema'),
         extraLabel: node.type === 'folder' ? 'Contiene' : 'Tamano',
         extraValue: node.type === 'folder' ? `${childrenCount} elementos` : `${size} bytes`,
-        tone: node.type === 'folder' ? 'folder' : 'notepad',
+        extraRows: isInTrash
+          ? [
+              {
+                label: 'Ubicacion original',
+                value: getOriginalLocationLabel(node, nodes, getPath),
+              },
+              {
+                label: 'Eliminado',
+                value: formatShortDateTime(trashRootNode?.trashedAt),
+              },
+            ]
+          : [],
+        tone: node.id === recycleBinFolderId
+          ? getExplorerNodeIconType(node, trashItemCount)
+          : node.type === 'folder' ? 'folder' : 'notepad',
       };
     }
 
@@ -53,6 +64,7 @@ export function PropertiesApp({ launchData }) {
         updatedAt: 'Sistema',
         extraLabel: 'Destino',
         extraValue: shortcut.description,
+        extraRows: [],
         tone: shortcut.kind === 'app' ? 'computer' : 'screen',
       };
     }
@@ -65,6 +77,7 @@ export function PropertiesApp({ launchData }) {
       updatedAt: 'Sistema',
       extraLabel: 'Estado',
       extraValue: 'No se encontro informacion del elemento.',
+      extraRows: [],
       tone: 'settings',
     };
   }, [getPath, node, nodes, shortcut]);
@@ -96,6 +109,12 @@ export function PropertiesApp({ launchData }) {
           <dt>{details.extraLabel}</dt>
           <dd>{details.extraValue}</dd>
         </div>
+        {details.extraRows.map((row) => (
+          <div key={row.label}>
+            <dt>{row.label}</dt>
+            <dd>{row.value}</dd>
+          </div>
+        ))}
       </dl>
     </div>
   );

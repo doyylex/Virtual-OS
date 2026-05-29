@@ -3,6 +3,8 @@ const DB_VERSION = 2;
 const NODE_STORE_NAME = 'nodes';
 const DESKTOP_LAYOUT_STORE_NAME = 'desktopLayout';
 const DESKTOP_LAYOUT_KEY = 'positions';
+const DESKTOP_FOLDER_ID = 'desktop-folder';
+const RECYCLE_BIN_FOLDER_ID = 'recycle-bin-folder';
 
 const rootNodes = [
   {
@@ -22,7 +24,7 @@ const rootNodes = [
     updatedAt: 0,
   },
   {
-    id: 'desktop-folder',
+    id: DESKTOP_FOLDER_ID,
     parentId: 'root',
     type: 'folder',
     name: 'Escritorio',
@@ -38,7 +40,7 @@ const rootNodes = [
     updatedAt: 0,
   },
   {
-    id: 'recycle-bin-folder',
+    id: RECYCLE_BIN_FOLDER_ID,
     parentId: 'root',
     type: 'folder',
     name: 'Papelera',
@@ -82,9 +84,40 @@ const ensureObjectStores = (database) => {
   }
 };
 
+const getValidTimestamp = (timestamp, fallback) => {
+  const time = Number(timestamp);
+
+  return Number.isFinite(time) && time > 0 ? time : fallback;
+};
+
+const normalizeNode = (node, now) => {
+  const createdAt = getValidTimestamp(node.createdAt, now);
+  const updatedAt = getValidTimestamp(node.updatedAt, createdAt);
+  const normalizedNode = {
+    ...node,
+    createdAt,
+    updatedAt,
+  };
+
+  if (normalizedNode.parentId === RECYCLE_BIN_FOLDER_ID) {
+    normalizedNode.trashedAt = getValidTimestamp(normalizedNode.trashedAt, updatedAt);
+
+    if (!normalizedNode.originalParentId || normalizedNode.originalParentId === RECYCLE_BIN_FOLDER_ID) {
+      normalizedNode.originalParentId = DESKTOP_FOLDER_ID;
+    }
+  }
+
+  return normalizedNode;
+};
+
+const haveNodesChanged = (nodes, normalizedNodes) =>
+  nodes.length !== normalizedNodes.length ||
+  normalizedNodes.some((node, index) => JSON.stringify(node) !== JSON.stringify(nodes[index]));
+
 const withSystemNodes = (nodes) => {
   const now = Date.now();
-  const existingNodeIds = new Set(nodes.map((node) => node.id));
+  const normalizedNodes = nodes.map((node) => normalizeNode(node, now));
+  const existingNodeIds = new Set(normalizedNodes.map((node) => node.id));
   const missingNodes = rootNodes
     .filter((node) => !existingNodeIds.has(node.id))
     .map((node) => ({
@@ -93,7 +126,7 @@ const withSystemNodes = (nodes) => {
       updatedAt: node.updatedAt || now,
     }));
 
-  return [...nodes, ...missingNodes];
+  return [...normalizedNodes, ...missingNodes];
 };
 
 const openDatabase = () =>
@@ -147,7 +180,7 @@ export async function loadFileSystemNodes() {
 
   const normalizedNodes = withSystemNodes(nodes);
 
-  if (normalizedNodes.length !== nodes.length) {
+  if (haveNodesChanged(nodes, normalizedNodes)) {
     await saveFileSystemNodes(normalizedNodes);
   }
 

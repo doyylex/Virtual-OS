@@ -4,21 +4,21 @@ import { useWindowStore } from '../store/useWindowStore.js';
 
 export function TaskbarButton({ windowItem }) {
   const activeWindowId = useWindowStore((state) => state.activeWindowId);
-  const focusWindow = useWindowStore((state) => state.focusWindow);
-  const restoreWindow = useWindowStore((state) => state.restoreWindow);
+  const toggleTaskbarWindow = useWindowStore((state) => state.toggleTaskbarWindow);
   const playSound = useSystemSound();
   const app = getAppById(windowItem.appId);
   const isActive = activeWindowId === windowItem.id && !windowItem.isMinimized;
 
   const handleClick = () => {
-    if (windowItem.isMinimized) {
-      restoreWindow(windowItem.id);
+    if (windowItem.isMinimized || windowItem.transitionState === 'minimizing') {
       playSound('restore');
-      return;
+    } else if (isActive) {
+      playSound('minimize');
+    } else {
+      playSound('click');
     }
 
-    focusWindow(windowItem.id);
-    playSound('click');
+    toggleTaskbarWindow(windowItem.id);
   };
 
   return (

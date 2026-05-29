@@ -1,6 +1,9 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSystemSound } from '../hooks/useSystemSound.js';
+import { joinFileName } from '../services/fileNames.js';
+import { useDialogStore } from '../store/useDialogStore.js';
 import { useFileSystemStore } from '../store/useFileSystemStore.js';
+import { useWindowStore } from '../store/useWindowStore.js';
 
 const initialText = [
   'Bienvenido a Roso OS.',
@@ -9,13 +12,20 @@ const initialText = [
   'Los archivos .txt persisten en IndexedDB.',
 ].join('\n');
 
-const ensureTxtExtension = (name) => (name.toLowerCase().endsWith('.txt') ? name : `${name}.txt`);
+const invalidFileNamePattern = /[<>:"/\\|?*]/;
+const recycleBinFolderId = 'recycle-bin-folder';
+const textFileExtension = '.txt';
 
-export function NotepadApp({ launchData }) {
+const validateFileName = (name) => (invalidFileNamePattern.test(name) ? 'El nombre no puede usar caracteres reservados.' : '');
+
+export function NotepadApp({ launchData, windowId }) {
   const nodes = useFileSystemStore((state) => state.nodes);
-  const createFile = useFileSystemStore((state) => state.createFile);
-  const updateFileContent = useFileSystemStore((state) => state.updateFileContent);
+  const createFileAsync = useFileSystemStore((state) => state.createFileAsync);
+  const updateFileContentAsync = useFileSystemStore((state) => state.updateFileContentAsync);
   const getNode = useFileSystemStore((state) => state.getNode);
+  const showAlert = useDialogStore((state) => state.showAlert);
+  const showSaveFileDialog = useDialogStore((state) => state.showSaveFileDialog);
+  const setWindowTitle = useWindowStore((state) => state.setWindowTitle);
   const initialFile = launchData?.fileId ? getNode(launchData.fileId) : null;
   const [text, setText] = useState(() => (initialFile?.type === 'file' ? initialFile.content ?? '' : initialText));
   const [savedFileId, setSavedFileId] = useState(() => (initialFile?.type === 'file' ? initialFile.id : null));
@@ -23,8 +33,16 @@ export function NotepadApp({ launchData }) {
   const playSound = useSystemSound();
   const linkedFile = savedFileId ? getNode(savedFileId) : null;
 
+  useEffect(() => {
+    if (!windowId) {
+      return;
+    }
+
+    setWindowTitle(windowId, `Bloc de notas - ${linkedFile?.name ?? 'Sin titulo'}`);
+  }, [linkedFile?.name, setWindowTitle, windowId]);
+
   const getUniqueFileName = (folderId, defaultName) => {
-    const fileName = ensureTxtExtension(defaultName.trim() || 'nota.txt');
+    const fileName = joinFileName(defaultName.trim() || 'nota', textFileExtension);
     const existingNames = new Set(nodes.filter((node) => node.parentId === folderId).map((node) => node.name.toLowerCase()));
 
     if (!existingNames.has(fileName.toLowerCase())) {
@@ -43,6 +61,31 @@ export function NotepadApp({ launchData }) {
     return nextName;
   };
 
+  const getInitialSaveFolderId = () => {
+    if (linkedFile?.parentId && linkedFile.parentId !== recycleBinFolderId) {
+      return linkedFile.parentId;
+    }
+
+    return 'documents';
+  };
+
+  const showSaveSuccess = () =>
+    showAlert({
+      title: 'Bloc de notas',
+      message: 'EXITO AL GUARDAR',
+      confirmLabel: 'Aceptar',
+      icon: 'info',
+    });
+
+  const showSaveError = (error) =>
+    showAlert({
+      title: 'Bloc de notas',
+      message: 'ERROR AL GUARDAR',
+      detail: error?.message ?? 'No se pudo guardar el archivo.',
+      confirmLabel: 'Aceptar',
+      icon: 'warning',
+    });
+
   const stats = useMemo(() => {
     const lineCount = text.length === 0 ? 1 : text.split('\n').length;
 
@@ -51,13 +94,6 @@ export function NotepadApp({ launchData }) {
       lines: lineCount,
     };
   }, [text]);
-
-  const handleNew = () => {
-    setText('');
-    setSavedFileId(null);
-    textareaRef.current?.focus();
-    playSound('click');
-  };
 
   const handleSelectAll = () => {
     textareaRef.current?.focus();
@@ -71,50 +107,56 @@ export function NotepadApp({ launchData }) {
     playSound('click');
   };
 
-  const handleSave = () => {
-    if (savedFileId && getNode(savedFileId)) {
-      updateFileContent(savedFileId, text);
+  const handleSave = async () => {
+    try {
+      if (savedFileId && getNode(savedFileId)) {
+        await updateFileContentAsync(savedFileId, text);
+        playSound('click');
+        await showSaveSuccess();
+        return;
+      }
+
+      await handleSaveAs();
+    } catch (error) {
       playSound('click');
+      await showSaveError(error);
+    }
+  };
+
+  const handleSaveAs = async () => {
+    const saveData = await showSaveFileDialog({
+      title: 'Guardar como',
+      message: 'Elige el nombre y la carpeta del archivo.',
+      detail: 'La Papelera no esta disponible como destino.',
+      defaultValue: linkedFile?.name ?? 'nota.txt',
+      lockedExtension: textFileExtension,
+      initialFolderId: getInitialSaveFolderId(),
+      confirmLabel: 'Guardar',
+      blockedFolderIds: [recycleBinFolderId],
+      validate: validateFileName,
+    });
+
+    if (!saveData) {
       return;
     }
 
-    handleSaveAs();
-  };
-
-  const saveToFolder = (folderId, defaultName, shouldAskName = true) => {
-    const name = shouldAskName ? window.prompt('Nombre del archivo', defaultName) : getUniqueFileName(folderId, defaultName);
-
-    if (name?.trim()) {
-      const fileId = createFile(folderId, shouldAskName ? getUniqueFileName(folderId, name.trim()) : name.trim(), text);
+    try {
+      const fileName = getUniqueFileName(saveData.folderId, saveData.name);
+      const fileId = await createFileAsync(saveData.folderId, fileName, text);
       setSavedFileId(fileId);
       playSound('click');
+      await showSaveSuccess();
+    } catch (error) {
+      playSound('click');
+      await showSaveError(error);
     }
-  };
-
-  const handleSaveToDesktop = () => saveToFolder('desktop-folder', linkedFile?.name ?? 'nota-escritorio.txt', false);
-
-  const handleSaveToDocuments = () => saveToFolder('documents', linkedFile?.name ?? 'nota.txt', false);
-
-  const handleSaveAs = () => {
-    const location = window.prompt('Guardar en: escritorio o documentos', 'escritorio');
-
-    if (!location) {
-      return;
-    }
-
-    const normalizedLocation = location.trim().toLowerCase();
-    const folderId = normalizedLocation.startsWith('doc') ? 'documents' : 'desktop-folder';
-    saveToFolder(folderId, linkedFile?.name ?? 'nota.txt');
   };
 
   return (
     <div className="ros-notepad-app">
       <div className="ros-app-toolbar" aria-label="Barra de herramientas de Bloc de notas">
-        <button className="ros-app-toolbar-button" type="button" onClick={handleNew}>Nuevo</button>
-        <button className="ros-app-toolbar-button" type="button" onClick={handleSave}>Guardar</button>
-        <button className="ros-app-toolbar-button" type="button" onClick={handleSaveToDesktop}>Guardar en escritorio</button>
-        <button className="ros-app-toolbar-button" type="button" onClick={handleSaveToDocuments}>Guardar en documentos</button>
-        <button className="ros-app-toolbar-button" type="button" onClick={handleSaveAs}>Guardar como</button>
+        <button className="ros-app-toolbar-button" type="button" onClick={() => void handleSave()}>Guardar</button>
+        <button className="ros-app-toolbar-button" type="button" onClick={() => void handleSaveAs()}>Guardar como</button>
         <button className="ros-app-toolbar-button" type="button" onClick={handleSelectAll}>Seleccionar todo</button>
         <button className="ros-app-toolbar-button" type="button" onClick={handleClear}>Limpiar</button>
       </div>
