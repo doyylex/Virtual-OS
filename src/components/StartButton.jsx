@@ -25,7 +25,7 @@ export function StartButton() {
         <span />
         <span />
       </span>
-      Inicio
+      Start
     </button>
   );
 }

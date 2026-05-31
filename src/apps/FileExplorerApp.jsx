@@ -21,14 +21,14 @@ const recycleBinFolderId = 'recycle-bin-folder';
 const protectedNodeIds = new Set(['root', 'documents', 'desktop-folder', 'system-folder', recycleBinFolderId]);
 const desktopDropIconOffset = { x: 39, y: 37 };
 const viewModes = [
-  { id: 'details', label: 'Detalles' },
-  { id: 'list', label: 'Lista' },
-  { id: 'icons', label: 'Iconos' },
+  { id: 'details', label: 'Details' },
+  { id: 'list', label: 'List' },
+  { id: 'icons', label: 'Icons' },
 ];
 const sortOptions = [
-  { id: 'name', label: 'Nombre' },
-  { id: 'type', label: 'Tipo' },
-  { id: 'updatedAt', label: 'Fecha' },
+  { id: 'name', label: 'Name' },
+  { id: 'type', label: 'Type' },
+  { id: 'updatedAt', label: 'Date' },
 ];
 
 const isTextEntryElement = (target) =>
@@ -100,10 +100,10 @@ const sortExplorerNodes = (items, sortBy, sortDirection) =>
     let comparison =
       typeof firstValue === 'number'
         ? firstValue - secondValue
-        : firstValue.localeCompare(secondValue, 'es');
+        : firstValue.localeCompare(secondValue, 'en');
 
     if (comparison === 0) {
-      comparison = firstNode.name.localeCompare(secondNode.name, 'es');
+      comparison = firstNode.name.localeCompare(secondNode.name, 'en');
     }
 
     return sortDirection === 'asc' ? comparison : -comparison;
@@ -111,7 +111,7 @@ const sortExplorerNodes = (items, sortBy, sortDirection) =>
 
 const getSortHint = (sortBy, sortDirection) => {
   if (sortBy === 'updatedAt') {
-    return sortDirection === 'asc' ? 'antiguo' : 'reciente';
+    return sortDirection === 'asc' ? 'oldest' : 'newest';
   }
 
   return sortDirection === 'asc' ? 'A-Z' : 'Z-A';
@@ -223,7 +223,7 @@ export function FileExplorerApp({ launchData, windowId }) {
   const clipboardNodes = clipboardNodeIds.map((nodeId) => nodes.find((node) => node.id === nodeId)).filter(Boolean);
   const selectedNodePath = selectedNode ? getPath(selectedNode.id) : [];
   const clipboardNodePaths = clipboardNodes.map((node) => getPath(node.id));
-  const currentFolderTitle = currentFolder?.id === recycleBinFolderId ? 'Papelera' : currentFolder?.name ?? 'Carpeta';
+  const currentFolderTitle = currentFolder?.id === recycleBinFolderId ? 'Recycle Bin' : currentFolder?.name ?? 'Folder';
   const isRecycleBinFolder = currentFolderId === recycleBinFolderId;
   const isCurrentFolderInTrash = isPathInsideTrash(path);
   const isSelectedNodeInTrash = isPathInsideTrash(selectedNodePath);
@@ -368,7 +368,7 @@ export function FileExplorerApp({ launchData, windowId }) {
 
     setWindowTitle(
       windowId,
-      isSearchActive ? `Explorador - Buscar "${trimmedSearchQuery}"` : `Explorador - ${currentFolderTitle}`,
+      isSearchActive ? `File Explorer - Search "${trimmedSearchQuery}"` : `File Explorer - ${currentFolderTitle}`,
     );
   }, [currentFolderTitle, isSearchActive, setWindowTitle, trimmedSearchQuery, windowId]);
 
@@ -457,13 +457,13 @@ export function FileExplorerApp({ launchData, windowId }) {
       return;
     }
 
-    const createdId = createFolder(currentFolderId, 'Nueva carpeta');
+    const createdId = createFolder(currentFolderId, 'New Folder');
     const createdNode = useFileSystemStore.getState().getNode(createdId);
 
     closeContextMenu();
     selectSingleNode(createdId);
     setEditingNodeId(createdId);
-    setDraftName(createdNode?.name ?? 'Nueva carpeta');
+    setDraftName(createdNode?.name ?? 'New Folder');
     playSound('click');
   };
 
@@ -472,7 +472,7 @@ export function FileExplorerApp({ launchData, windowId }) {
       return;
     }
 
-    const createdId = createFile(currentFolderId, 'Nuevo documento de texto.txt', '');
+    const createdId = createFile(currentFolderId, 'New Text Document.txt', '');
     const createdNode = useFileSystemStore.getState().getNode(createdId);
 
     closeContextMenu();
@@ -495,7 +495,7 @@ export function FileExplorerApp({ launchData, windowId }) {
   };
 
   const getElementCountLabel = (items) =>
-    `${items.length} elemento${items.length === 1 ? '' : 's'}`;
+    `${items.length} item${items.length === 1 ? '' : 's'}`;
 
   const canOperateNodes = (items) =>
     items.length > 0 &&
@@ -596,13 +596,13 @@ export function FileExplorerApp({ launchData, windowId }) {
 
     if (items.every((node) => isPathInsideTrash(getPath(node.id)))) {
       const confirmed = await showConfirm({
-        title: 'Eliminar permanentemente',
+        title: 'Delete Permanently',
         message:
           items.length === 1
-            ? `Eliminar permanentemente "${items[0].name}"?`
-            : `Eliminar permanentemente ${getElementCountLabel(items)}?`,
-        detail: 'Esta accion no se puede deshacer.',
-        confirmLabel: 'Eliminar',
+            ? `Delete Permanently "${items[0].name}"?`
+            : `Delete Permanently ${getElementCountLabel(items)}?`,
+        detail: 'This action cannot be undone.',
+        confirmLabel: 'Delete',
         icon: 'warning',
       });
 
@@ -652,10 +652,10 @@ export function FileExplorerApp({ launchData, windowId }) {
     cancelRename();
 
     const confirmed = await showConfirm({
-      title: 'Restaurar todos',
-      message: `Restaurar ${trashItemCount} elemento${trashItemCount === 1 ? '' : 's'} de la Papelera?`,
-      detail: 'Los elementos volveran a su ubicacion original. Si ya no existe, se restauraran en el Escritorio.',
-      confirmLabel: 'Restaurar',
+      title: 'Restore All',
+      message: `Restore ${trashItemCount} item${trashItemCount === 1 ? '' : 's'} from the Recycle Bin?`,
+      detail: 'Items will return to their original location. If it no longer exists, they will be restored to the Desktop.',
+      confirmLabel: 'Restore',
       icon: 'question',
     });
 
@@ -671,13 +671,13 @@ export function FileExplorerApp({ launchData, windowId }) {
     }
 
     return showConfirm({
-      title: 'Mover a Papelera',
+      title: 'Move to Recycle Bin',
       message:
         items.length === 1
-          ? `Mover "${items[0].name}" a la Papelera?`
-          : `Mover ${getElementCountLabel(items)} a la Papelera?`,
-      detail: 'Podras restaurarlo desde la Papelera si lo necesitas.',
-      confirmLabel: 'Mover',
+          ? `Move "${items[0].name}" to the Recycle Bin?`
+          : `Move ${getElementCountLabel(items)} to the Recycle Bin?`,
+      detail: 'You can restore it from the Recycle Bin if needed.',
+      confirmLabel: 'Move',
       icon: 'warning',
     });
   };
@@ -688,13 +688,13 @@ export function FileExplorerApp({ launchData, windowId }) {
     }
 
     return showConfirm({
-      title: 'Restaurar desde Papelera',
+      title: 'Restore from Recycle Bin',
       message:
         items.length === 1
-          ? `Restaurar "${items[0].name}"?`
-          : `Restaurar ${getElementCountLabel(items)}?`,
-      detail: `Se movera a ${getDropFolderLabel(targetFolderId)} y dejara de estar en la Papelera.`,
-      confirmLabel: 'Restaurar',
+          ? `Restore "${items[0].name}"?`
+          : `Restore ${getElementCountLabel(items)}?`,
+      detail: `It will move to ${getDropFolderLabel(targetFolderId)} and leave the Recycle Bin.`,
+      confirmLabel: 'Restore',
       icon: 'warning',
     });
   };
@@ -708,10 +708,10 @@ export function FileExplorerApp({ launchData, windowId }) {
     cancelRename();
 
     const confirmed = await showConfirm({
-      title: 'Vaciar Papelera',
-      message: 'Eliminar permanentemente todos los elementos de la Papelera?',
-      detail: 'Todos los archivos de la Papelera se borraran de forma definitiva.',
-      confirmLabel: 'Vaciar',
+      title: 'Empty Recycle Bin',
+      message: 'Permanently delete all items in the Recycle Bin?',
+      detail: 'All files in the Recycle Bin will be permanently deleted.',
+      confirmLabel: 'Empty',
       icon: 'warning',
     });
 
@@ -793,38 +793,38 @@ export function FileExplorerApp({ launchData, windowId }) {
 
   const getDropFolderLabel = (folderId) => {
     if (folderId === desktopFolderId) {
-      return 'Escritorio';
+      return 'Desktop';
     }
 
     if (folderId === recycleBinFolderId) {
-      return 'Papelera';
+      return 'Recycle Bin';
     }
 
-    return getNode(folderId)?.name ?? 'carpeta';
+    return getNode(folderId)?.name ?? 'folder';
   };
 
   const getDragDropFeedback = (dropTarget, isValidDropTarget, isTrashDrag) => {
     if (!dropTarget) {
-      return { state: 'invalid', label: 'No se puede soltar aqui' };
+      return { state: 'invalid', label: 'Cannot drop here' };
     }
 
     if (!isValidDropTarget) {
-      return { state: 'invalid', label: 'No se puede soltar aqui' };
+      return { state: 'invalid', label: 'Cannot drop here' };
     }
 
     if (dropTarget.type === 'paint') {
-      return { state: 'valid', label: 'Editar en Paint' };
+      return { state: 'valid', label: 'Edit in Paint' };
     }
 
     if (dropTarget.folderId === recycleBinFolderId) {
-      return { state: 'valid', label: 'Enviar a Papelera' };
+      return { state: 'valid', label: 'Send to Recycle Bin' };
     }
 
     if (isTrashDrag) {
-      return { state: 'valid', label: `Restaurar en ${getDropFolderLabel(dropTarget.folderId)}` };
+      return { state: 'valid', label: `Restore to ${getDropFolderLabel(dropTarget.folderId)}` };
     }
 
-    return { state: 'valid', label: `Mover a ${getDropFolderLabel(dropTarget.folderId)}` };
+    return { state: 'valid', label: `Move to ${getDropFolderLabel(dropTarget.folderId)}` };
   };
 
   const placeMovedNodesOnDesktop = (nodeIds, dropPosition) => {
@@ -1040,20 +1040,20 @@ export function FileExplorerApp({ launchData, windowId }) {
         return [
           {
             id: 'restore-node',
-            label: isSingleAction ? 'Restaurar' : 'Restaurar seleccion',
+            label: isSingleAction ? 'Restore' : 'Restore Selection',
             disabled: !canRestoreTarget,
             onSelect: () => handleRestoreNodes(actionNodes),
           },
           {
             id: 'delete-node-permanently',
-            label: isSingleAction ? 'Eliminar permanentemente' : 'Eliminar seleccion permanentemente',
+            label: isSingleAction ? 'Delete Permanently' : 'Delete Selection Permanently',
             disabled: !canDeleteTarget,
             onSelect: () => void handleDeleteNodes(actionNodes),
           },
           { id: 'separator-node', type: 'separator' },
           {
             id: 'node-properties',
-            label: 'Propiedades',
+            label: 'Properties',
             disabled: !isSingleAction,
             onSelect: () => openProperties(targetNode),
           },
@@ -1061,46 +1061,46 @@ export function FileExplorerApp({ launchData, windowId }) {
       }
 
       return [
-        { id: 'open-node', label: 'Abrir', disabled: !isSingleAction, onSelect: () => handleOpenNode(targetNode) },
+        { id: 'open-node', label: 'Open', disabled: !isSingleAction, onSelect: () => handleOpenNode(targetNode) },
         { id: 'separator-clipboard', type: 'separator' },
         {
           id: 'copy-node',
-          label: isSingleAction ? 'Copiar' : 'Copiar seleccion',
+          label: isSingleAction ? 'Copy' : 'Copy Selection',
           hint: 'Ctrl+C',
           disabled: !canOperateTarget,
           onSelect: () => handleCopyNodes(actionNodes),
         },
         {
           id: 'cut-node',
-          label: isSingleAction ? 'Cortar' : 'Cortar seleccion',
+          label: isSingleAction ? 'Cut' : 'Cut Selection',
           hint: 'Ctrl+X',
           disabled: !canOperateTarget,
           onSelect: () => handleCutNodes(actionNodes),
         },
         {
           id: 'paste-node',
-          label: 'Pegar',
+          label: 'Paste',
           hint: 'Ctrl+V',
           disabled: !canPasteInCurrentFolder,
           onSelect: handlePaste,
         },
         {
           id: 'duplicate-node',
-          label: 'Duplicar',
+          label: 'Duplicate',
           disabled: !isSingleAction || !canOperateTarget,
           onSelect: () => handleDuplicateNode(targetNode),
         },
         { id: 'separator-edit', type: 'separator' },
         {
           id: 'rename-node',
-          label: 'Renombrar',
+          label: 'Rename',
           hint: 'F2',
           disabled: !isSingleAction,
           onSelect: () => beginRename(targetNode),
         },
         {
           id: 'delete-node',
-          label: isSingleAction ? 'Eliminar' : 'Eliminar seleccion',
+          label: isSingleAction ? 'Delete' : 'Delete Selection',
           hint: 'Del',
           disabled: !canDeleteTarget,
           onSelect: () => void handleDeleteNodes(actionNodes),
@@ -1108,7 +1108,7 @@ export function FileExplorerApp({ launchData, windowId }) {
         { id: 'separator-node', type: 'separator' },
         {
           id: 'node-properties',
-          label: 'Propiedades',
+          label: 'Properties',
           disabled: !isSingleAction,
           onSelect: () => openProperties(targetNode),
         },
@@ -1119,34 +1119,34 @@ export function FileExplorerApp({ launchData, windowId }) {
       return [
         {
           id: 'restore-all-trash',
-          label: 'Restaurar todos',
+          label: 'Restore All',
           disabled: trashItemCount === 0,
           onSelect: () => void handleRestoreAllTrash(),
         },
         {
           id: 'empty-trash',
-          label: 'Vaciar Papelera',
+          label: 'Empty Recycle Bin',
           disabled: trashItemCount === 0,
           onSelect: () => void handleEmptyTrash(),
         },
         { id: 'separator-folder', type: 'separator' },
-        { id: 'folder-properties', label: 'Propiedades', onSelect: () => openProperties(currentFolder) },
+        { id: 'folder-properties', label: 'Properties', onSelect: () => openProperties(currentFolder) },
       ];
     }
 
     return [
-      { id: 'new-folder', label: 'Nueva carpeta', onSelect: handleCreateFolder },
-      { id: 'new-text-file', label: 'Nuevo documento de texto', onSelect: handleCreateFile },
+      { id: 'new-folder', label: 'New Folder', onSelect: handleCreateFolder },
+      { id: 'new-text-file', label: 'New Text Document', onSelect: handleCreateFile },
       { id: 'separator-folder', type: 'separator' },
       {
         id: 'paste-folder',
-        label: 'Pegar',
+        label: 'Paste',
         hint: 'Ctrl+V',
         disabled: !canPasteInCurrentFolder,
         onSelect: handlePaste,
       },
       { id: 'separator-folder-properties', type: 'separator' },
-      { id: 'folder-properties', label: 'Propiedades', onSelect: () => openProperties(currentFolder) },
+      { id: 'folder-properties', label: 'Properties', onSelect: () => openProperties(currentFolder) },
     ];
   };
 
@@ -1204,7 +1204,7 @@ export function FileExplorerApp({ launchData, windowId }) {
   };
 
   if (!isReady) {
-    return <div className="ros-file-explorer-loading">Cargando sistema de archivos...</div>;
+    return <div className="ros-file-explorer-loading">Loading file system...</div>;
   }
 
   if (error) {
@@ -1213,49 +1213,49 @@ export function FileExplorerApp({ launchData, windowId }) {
 
   return (
     <div className="ros-file-explorer-app" onClick={closeContextMenu} onKeyDown={handleExplorerKeyDown}>
-      <div className="ros-app-toolbar" aria-label="Barra de herramientas del Explorador">
+      <div className="ros-app-toolbar" aria-label="File Explorer toolbar">
         <button className="ros-app-toolbar-button ros-explorer-nav-button" type="button" disabled={!canGoBack} onClick={goBack}>
           <span aria-hidden="true">&lt;</span>
-          Atras
+          Back
         </button>
         <button className="ros-app-toolbar-button ros-explorer-nav-button" type="button" disabled={!canGoForward} onClick={goForward}>
           <span aria-hidden="true">&gt;</span>
-          Adelante
+          Forward
         </button>
         <button className="ros-app-toolbar-button ros-explorer-nav-button" type="button" disabled={!canGoUp} onClick={goUp}>
           <span aria-hidden="true">^</span>
-          Subir
+          Up
         </button>
         <span className="ros-app-toolbar-separator" aria-hidden="true" />
         {isRecycleBinFolder ? (
           <>
             <button className="ros-app-toolbar-button" type="button" disabled={!canRestoreSelectedNodes} onClick={() => handleRestoreNodes(selectedNodes)}>
-              Restaurar
+              Restore
             </button>
             <button className="ros-app-toolbar-button" type="button" disabled={!canDeleteSelectedNodes} onClick={() => void handleDeleteNodes(selectedNodes)}>
-              Eliminar permanentemente
+              Delete Permanently
             </button>
             <button className="ros-app-toolbar-button" type="button" disabled={trashItemCount === 0} onClick={() => void handleRestoreAllTrash()}>
-              Restaurar todos
+              Restore All
             </button>
             <button className="ros-app-toolbar-button" type="button" disabled={trashItemCount === 0} onClick={() => void handleEmptyTrash()}>
-              Vaciar Papelera
+              Empty Recycle Bin
             </button>
           </>
         ) : (
           <>
-            <button className="ros-app-toolbar-button" type="button" disabled={!canCreateInCurrentFolder} onClick={handleCreateFolder}>Nueva carpeta</button>
-            <button className="ros-app-toolbar-button" type="button" disabled={!canCreateInCurrentFolder} onClick={handleCreateFile}>Nuevo archivo</button>
-            <button className="ros-app-toolbar-button" type="button" disabled={!canOperateSelectedNodes} onClick={() => handleCopyNodes(selectedNodes)}>Copiar</button>
-            <button className="ros-app-toolbar-button" type="button" disabled={!canOperateSelectedNodes} onClick={() => handleCutNodes(selectedNodes)}>Cortar</button>
-            <button className="ros-app-toolbar-button" type="button" disabled={!canPasteInCurrentFolder} onClick={handlePaste}>Pegar</button>
-            <button className="ros-app-toolbar-button" type="button" disabled={!canOperateSelectedNode} onClick={() => handleDuplicateNode(selectedNode)}>Duplicar</button>
-            <button className="ros-app-toolbar-button" type="button" disabled={!canRenameSelectedNode} onClick={() => beginRename(selectedNode)}>Renombrar</button>
-            <button className="ros-app-toolbar-button" type="button" disabled={!canDeleteSelectedNodes} onClick={() => void handleDeleteNodes(selectedNodes)}>Eliminar</button>
+            <button className="ros-app-toolbar-button" type="button" disabled={!canCreateInCurrentFolder} onClick={handleCreateFolder}>New Folder</button>
+            <button className="ros-app-toolbar-button" type="button" disabled={!canCreateInCurrentFolder} onClick={handleCreateFile}>New File</button>
+            <button className="ros-app-toolbar-button" type="button" disabled={!canOperateSelectedNodes} onClick={() => handleCopyNodes(selectedNodes)}>Copy</button>
+            <button className="ros-app-toolbar-button" type="button" disabled={!canOperateSelectedNodes} onClick={() => handleCutNodes(selectedNodes)}>Cut</button>
+            <button className="ros-app-toolbar-button" type="button" disabled={!canPasteInCurrentFolder} onClick={handlePaste}>Paste</button>
+            <button className="ros-app-toolbar-button" type="button" disabled={!canOperateSelectedNode} onClick={() => handleDuplicateNode(selectedNode)}>Duplicate</button>
+            <button className="ros-app-toolbar-button" type="button" disabled={!canRenameSelectedNode} onClick={() => beginRename(selectedNode)}>Rename</button>
+            <button className="ros-app-toolbar-button" type="button" disabled={!canDeleteSelectedNodes} onClick={() => void handleDeleteNodes(selectedNodes)}>Delete</button>
           </>
         )}
         <span className="ros-app-toolbar-separator" aria-hidden="true" />
-        <span className="ros-explorer-toolbar-group" role="group" aria-label="Cambiar vista">
+        <span className="ros-explorer-toolbar-group" role="group" aria-label="Change view">
           {viewModes.map((mode) => (
             <button
               className="ros-app-toolbar-button ros-explorer-toggle-button"
@@ -1269,7 +1269,7 @@ export function FileExplorerApp({ launchData, windowId }) {
             </button>
           ))}
         </span>
-        <span className="ros-explorer-toolbar-group" role="group" aria-label="Ordenar elementos">
+        <span className="ros-explorer-toolbar-group" role="group" aria-label="Sort items">
           {sortOptions.map((option) => (
             <button
               className="ros-app-toolbar-button ros-explorer-toggle-button"
@@ -1287,7 +1287,7 @@ export function FileExplorerApp({ launchData, windowId }) {
       </div>
 
       <div className="ros-explorer-address">
-        <span className="ros-explorer-address-label">Direccion</span>
+        <span className="ros-explorer-address-label">Address</span>
         <div className="ros-explorer-address-box" title={addressText}>
           <span className="ros-file-node-icon" data-type={getExplorerNodeIconType(currentFolder, trashItemCount)} aria-hidden="true" />
           <strong>{addressText}</strong>
@@ -1295,12 +1295,12 @@ export function FileExplorerApp({ launchData, windowId }) {
       </div>
 
       <div className="ros-explorer-searchbar">
-        <label htmlFor={explorerSearchInputId}>Buscar</label>
+        <label htmlFor={explorerSearchInputId}>Search</label>
         <input
           id={explorerSearchInputId}
           ref={searchInputRef}
           value={searchQuery}
-          placeholder={`Buscar en ${currentFolderTitle}`}
+          placeholder={`Search in ${currentFolderTitle}`}
           autoComplete="off"
           spellCheck="false"
           autoFocus={Boolean(launchData?.searchMode || launchData?.searchQuery)}
@@ -1319,18 +1319,18 @@ export function FileExplorerApp({ launchData, windowId }) {
         />
         {isSearchActive ? (
           <button className="ros-app-toolbar-button" type="button" onClick={clearSearch}>
-            Limpiar
+            Clear
           </button>
         ) : null}
         <span>
           {isSearchActive
-            ? `${children.length} resultado${children.length === 1 ? '' : 's'} en ${searchScopeText}`
-            : 'Ctrl+F para buscar archivos y carpetas'}
+            ? `${children.length} result${children.length === 1 ? '' : 's'} in ${searchScopeText}`
+            : 'Ctrl+F to search files and folders'}
         </span>
       </div>
 
       <div className="ros-file-explorer-layout">
-        <aside className="ros-file-tree" aria-label="Arbol de carpetas">
+        <aside className="ros-file-tree" aria-label="Folder tree">
           {folderTree.map((folder) => (
             <button
               className="ros-file-tree-item"
@@ -1354,20 +1354,20 @@ export function FileExplorerApp({ launchData, windowId }) {
           className="ros-file-list"
           data-drop-folder-id={currentFolderId === recycleBinFolderId ? recycleBinFolderId : !isCurrentFolderInTrash ? currentFolderId : undefined}
           data-view-mode={viewMode}
-          aria-label="Contenido de carpeta"
+          aria-label="Folder contents"
           onClick={() => clearExplorerSelection()}
           onContextMenu={handleFolderContextMenu}
         >
           {children.length === 0 ? (
             <div className="ros-empty-folder">
               <span className="ros-empty-folder-icon" data-type={isSearchActive ? 'search' : isRecycleBinFolder ? 'trash' : 'folder'} aria-hidden="true" />
-              <h2>{isSearchActive ? 'No se encontraron resultados' : isRecycleBinFolder ? 'La Papelera esta vacia' : 'Esta carpeta esta vacia'}</h2>
+              <h2>{isSearchActive ? 'No results found' : isRecycleBinFolder ? 'The Recycle Bin is empty' : 'This folder is empty'}</h2>
               <p>
                 {isSearchActive
-                  ? `No hay coincidencias para "${trimmedSearchQuery}" en ${searchScopeText}.`
+                  ? `No matches for "${trimmedSearchQuery}" in ${searchScopeText}.`
                   : isRecycleBinFolder
-                  ? 'Los elementos eliminados apareceran aqui hasta que los restaures o los borres definitivamente.'
-                  : 'Crea una carpeta o un documento de texto para empezar.'}
+                  ? 'Deleted items will appear here until you restore them or delete them permanently.'
+                  : 'Create a folder or text document to get started.'}
               </p>
               {isSearchActive ? (
                 <div className="ros-empty-folder-actions">
@@ -1379,7 +1379,7 @@ export function FileExplorerApp({ launchData, windowId }) {
                       clearSearch();
                     }}
                   >
-                    Limpiar busqueda
+                    Clear Search
                   </button>
                 </div>
               ) : canCreateInCurrentFolder ? (
@@ -1392,7 +1392,7 @@ export function FileExplorerApp({ launchData, windowId }) {
                       handleCreateFolder();
                     }}
                   >
-                    Nueva carpeta
+                    New Folder
                   </button>
                   <button
                     className="ros-app-toolbar-button"
@@ -1402,7 +1402,7 @@ export function FileExplorerApp({ launchData, windowId }) {
                       handleCreateFile();
                     }}
                   >
-                    Nuevo documento
+                    New Document
                   </button>
                 </div>
               ) : null}
@@ -1419,7 +1419,7 @@ export function FileExplorerApp({ launchData, windowId }) {
                       handleSortChange('name');
                     }}
                   >
-                    Nombre
+                    Name
                   </button>
                   <button
                     type="button"
@@ -1428,7 +1428,7 @@ export function FileExplorerApp({ launchData, windowId }) {
                       handleSortChange('type');
                     }}
                   >
-                    Tipo
+                    Type
                   </button>
                   <button
                     type="button"
@@ -1443,7 +1443,7 @@ export function FileExplorerApp({ launchData, windowId }) {
                       handleSortChange('updatedAt');
                     }}
                   >
-                    {isSearchActive ? 'Ubicacion' : 'Modificado'}
+                    {isSearchActive ? 'Location' : 'Modified'}
                   </button>
                 </div>
               ) : null}
@@ -1484,7 +1484,7 @@ export function FileExplorerApp({ launchData, windowId }) {
                               value={draftName}
                               autoFocus
                               spellCheck="false"
-                              aria-label={`Renombrar ${node.name}`}
+                              aria-label={`Rename ${node.name}`}
                               onBlur={commitRename}
                               onChange={(event) => setDraftName(stripLockedExtension(event.target.value, editableName?.extension))}
                               onClick={(event) => event.stopPropagation()}
@@ -1523,26 +1523,26 @@ export function FileExplorerApp({ launchData, windowId }) {
           )}
         </section>
 
-        <aside className="ros-file-details" aria-label="Detalles">
+        <aside className="ros-file-details" aria-label="Details">
           {hasMultipleSelection ? (
             <>
               <span className="ros-file-node-icon ros-file-node-icon-large" data-type="folder" aria-hidden="true" />
-              <h2>{selectedNodes.length} elementos seleccionados</h2>
+              <h2>{selectedNodes.length} items selected</h2>
               <p>
-                {selectedFolderCount} carpeta{selectedFolderCount === 1 ? '' : 's'} y {selectedFileCount} archivo{selectedFileCount === 1 ? '' : 's'}
+                {selectedFolderCount} folder{selectedFolderCount === 1 ? '' : 's'} and {selectedFileCount} file{selectedFileCount === 1 ? '' : 's'}
               </p>
               <dl className="ros-file-details-list">
                 <div>
-                  <dt>Ubicacion</dt>
-                  <dd>{currentFolder?.name ?? 'Carpeta'}</dd>
+                  <dt>Location</dt>
+                  <dd>{currentFolder?.name ?? 'Folder'}</dd>
                 </div>
                 <div>
-                  <dt>Vista</dt>
+                  <dt>View</dt>
                   <dd>{viewModes.find((mode) => mode.id === viewMode)?.label}</dd>
                 </div>
                 <div>
-                  <dt>Seleccion</dt>
-                  <dd>Usa Ctrl+click para ajustar o Shift+click para seleccionar un rango.</dd>
+                  <dt>Selection</dt>
+                  <dd>Use Ctrl+click to adjust or Shift+click to select a range.</dd>
                 </div>
               </dl>
             </>
@@ -1550,44 +1550,44 @@ export function FileExplorerApp({ launchData, windowId }) {
             <>
               <span className="ros-file-node-icon ros-file-node-icon-large" data-type={getExplorerNodeIconType(selectedNode, trashItemCount)} aria-hidden="true" />
               <h2>{selectedNode.name}</h2>
-              <p>{selectedNode.parentId === recycleBinFolderId ? 'Elemento en Papelera' : getNodeTypeLabel(selectedNode)}</p>
+              <p>{selectedNode.parentId === recycleBinFolderId ? 'Item in Recycle Bin' : getNodeTypeLabel(selectedNode)}</p>
               <dl className="ros-file-details-list">
                 <div>
-                  <dt>{isSelectedNodeInTrash ? 'Ubicacion actual' : 'Ubicacion'}</dt>
+                  <dt>{isSelectedNodeInTrash ? 'Current Location' : 'Location'}</dt>
                   <dd>{selectedNodeParentPath}</dd>
                 </div>
                 <div>
-                  <dt>Creado</dt>
+                  <dt>Created</dt>
                   <dd>{formatShortDateTime(selectedNode.createdAt)}</dd>
                 </div>
                 <div>
-                  <dt>Modificado</dt>
+                  <dt>Modified</dt>
                   <dd>{formatShortDateTime(selectedNode.updatedAt)}</dd>
                 </div>
                 <div>
-                  <dt>{selectedNode.type === 'folder' ? 'Contiene' : 'Tamano'}</dt>
-                  <dd>{selectedNode.type === 'folder' ? `${selectedNodeChildrenCount} elementos` : selectedNodeSize}</dd>
+                  <dt>{selectedNode.type === 'folder' ? 'Contains' : 'Size'}</dt>
+                  <dd>{selectedNode.type === 'folder' ? `${selectedNodeChildrenCount} items` : selectedNodeSize}</dd>
                 </div>
               </dl>
               {isSelectedNodeInTrash ? (
                 <dl className="ros-file-details-list">
                   <div>
-                    <dt>Ubicacion original</dt>
+                    <dt>Original Location</dt>
                     <dd>{selectedNodeOriginalLocation}</dd>
                   </div>
                   <div>
-                    <dt>Eliminado</dt>
+                    <dt>Deleted</dt>
                     <dd>{formatShortDateTime(selectedTrashRootNode?.trashedAt)}</dd>
                   </div>
                 </dl>
               ) : null}
               {selectedNode.type === 'file' ? (
-                <section className="ros-file-preview" aria-label="Vista previa">
-                  <h3>Vista previa</h3>
+                <section className="ros-file-preview" aria-label="Preview">
+                  <h3>Preview</h3>
                   {isSelectedNodeImage ? (
                     <img className="ros-file-image-preview" src={selectedNode.content} alt={selectedNode.name} />
                   ) : (
-                    <pre>{selectedNode.content || 'Archivo vacio.'}</pre>
+                    <pre>{selectedNode.content || 'Empty file.'}</pre>
                   )}
                 </section>
               ) : null}
@@ -1596,44 +1596,44 @@ export function FileExplorerApp({ launchData, windowId }) {
             isSearchActive ? (
               <>
                 <span className="ros-file-node-icon ros-file-node-icon-large" data-type="search" aria-hidden="true" />
-                <h2>Resultados de busqueda</h2>
-                <p>{children.length} coincidencia{children.length === 1 ? '' : 's'}</p>
+                <h2>Search Results</h2>
+                <p>{children.length} match{children.length === 1 ? '' : 's'}</p>
                 <dl className="ros-file-details-list">
                   <div>
-                    <dt>Buscar</dt>
+                    <dt>Search</dt>
                     <dd>{trimmedSearchQuery}</dd>
                   </div>
                   <div>
-                    <dt>Ubicacion</dt>
+                    <dt>Location</dt>
                     <dd>{searchScopeText}</dd>
                   </div>
                   <div>
-                    <dt>Orden</dt>
+                    <dt>Sort</dt>
                     <dd>{sortOptions.find((option) => option.id === sortBy)?.label} {getSortHint(sortBy, sortDirection)}</dd>
                   </div>
                 </dl>
-                <p className="ros-file-details-help">Doble click abre el resultado seleccionado.</p>
+                <p className="ros-file-details-help">Double-click opens the selected result.</p>
               </>
             ) : (
               <>
                 <span className="ros-file-node-icon ros-file-node-icon-large" data-type={getExplorerNodeIconType(currentFolder, trashItemCount)} aria-hidden="true" />
-                <h2>{currentFolder?.name ?? 'Carpeta'}</h2>
-                <p>{children.length} elementos</p>
+                <h2>{currentFolder?.name ?? 'Folder'}</h2>
+                <p>{children.length} items</p>
                 <dl className="ros-file-details-list">
                   <div>
-                    <dt>Ubicacion</dt>
+                    <dt>Location</dt>
                     <dd>{path.slice(0, -1).map((node) => node.name).join('\\') || 'C:'}</dd>
                   </div>
                   <div>
-                    <dt>Vista</dt>
+                    <dt>View</dt>
                     <dd>{viewModes.find((mode) => mode.id === viewMode)?.label}</dd>
                   </div>
                   <div>
-                    <dt>Orden</dt>
+                    <dt>Sort</dt>
                     <dd>{sortOptions.find((option) => option.id === sortBy)?.label} {getSortHint(sortBy, sortDirection)}</dd>
                   </div>
                 </dl>
-                <p className="ros-file-details-help">Selecciona un archivo o carpeta.</p>
+                <p className="ros-file-details-help">Select a file or folder.</p>
               </>
             )
           )}
@@ -1651,7 +1651,7 @@ export function FileExplorerApp({ launchData, windowId }) {
         >
           <span className="ros-file-node-icon" data-type={getExplorerNodeIconType(dragPreview.nodes[0], trashItemCount)} />
           <span className="ros-file-drag-preview-text">
-            <span>{dragPreview.nodes.length === 1 ? dragPreview.nodes[0].name : `${dragPreview.nodes.length} elementos`}</span>
+            <span>{dragPreview.nodes.length === 1 ? dragPreview.nodes[0].name : `${dragPreview.nodes.length} items`}</span>
             {dragPreview.feedbackLabel ? <small>{dragPreview.feedbackLabel}</small> : null}
           </span>
         </div>

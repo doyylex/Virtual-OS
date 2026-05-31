@@ -35,13 +35,13 @@ const paintColors = [
 ];
 
 const toolLabels = {
-  pencil: 'Lapiz',
-  eraser: 'Goma',
-  bucket: 'Balde',
-  line: 'Linea',
-  rectangle: 'Rectangulo',
-  ellipse: 'Elipse',
-  text: 'Texto',
+  pencil: 'Pencil',
+  eraser: 'Eraser',
+  bucket: 'Bucket',
+  line: 'Line',
+  rectangle: 'Rectangle',
+  ellipse: 'Ellipse',
+  text: 'Text',
 };
 
 const disabledPaintTools = new Set(['text']);
@@ -81,7 +81,7 @@ const recycleBinFolderId = 'recycle-bin-folder';
 const invalidFileNamePattern = /[<>:"/\\|?*]/;
 const hexColorPattern = /^#?[0-9a-fA-F]{6}$/;
 
-const validateFileName = (name) => (invalidFileNamePattern.test(name) ? 'El nombre no puede usar caracteres reservados.' : '');
+const validateFileName = (name) => (invalidFileNamePattern.test(name) ? 'The name cannot use reserved characters.' : '');
 
 const isShapeTool = (tool) => shapeTools.has(tool);
 
@@ -395,7 +395,7 @@ export function PaintApp({ launchData, windowId }) {
       return;
     }
 
-    setWindowTitle(windowId, `Paint - ${linkedImageFile?.name ?? 'Sin titulo'}`);
+    setWindowTitle(windowId, `Paint - ${linkedImageFile?.name ?? 'Untitled'}`);
   }, [linkedImageFile?.name, setWindowTitle, windowId]);
 
   useEffect(() => {
@@ -519,7 +519,7 @@ export function PaintApp({ launchData, windowId }) {
       const context = canvas?.getContext('2d');
 
       if (!canvas || !context) {
-        reject(new Error('El lienzo no esta listo.'));
+        reject(new Error('The canvas is not ready.'));
         return;
       }
 
@@ -554,7 +554,7 @@ export function PaintApp({ launchData, windowId }) {
         resolve();
       };
 
-      image.onerror = () => reject(new Error('No se pudo cargar la imagen PNG.'));
+      image.onerror = () => reject(new Error('The PNG image could not be loaded.'));
       image.src = source;
     }), [prepareContext]);
 
@@ -607,8 +607,8 @@ export function PaintApp({ launchData, windowId }) {
       await showAlert({
         title: 'Paint',
         message: 'ERROR AL ABRIR',
-        detail: error?.message ?? 'No se pudo cargar la imagen PNG.',
-        confirmLabel: 'Aceptar',
+        detail: error?.message ?? 'The PNG image could not be loaded.',
+        confirmLabel: 'OK',
         icon: 'warning',
       });
       playSound('error');
@@ -1442,18 +1442,18 @@ export function PaintApp({ launchData, windowId }) {
   const showSaveSuccess = useCallback((fileName) =>
     showAlert({
       title: 'Paint',
-      message: 'IMAGEN GUARDADA',
-      detail: `${fileName} se guardo en Roso OS.`,
-      confirmLabel: 'Aceptar',
+      message: 'IMAGE SAVED',
+      detail: `${fileName} was saved in Roso OS.`,
+      confirmLabel: 'OK',
       icon: 'info',
     }), [showAlert]);
 
   const showSaveError = useCallback((error) =>
     showAlert({
       title: 'Paint',
-      message: 'ERROR AL GUARDAR',
-      detail: error?.message ?? 'No se pudo guardar la imagen.',
-      confirmLabel: 'Aceptar',
+      message: 'SAVE ERROR',
+      detail: error?.message ?? 'The image could not be saved.',
+      confirmLabel: 'OK',
       icon: 'warning',
     }), [showAlert]);
 
@@ -1481,13 +1481,13 @@ export function PaintApp({ launchData, windowId }) {
     }
 
     const saveData = await showSaveFileDialog({
-      title: 'Guardar imagen',
-      message: 'Elige el nombre y la carpeta de la imagen.',
-      detail: 'La Papelera no esta disponible como destino.',
+      title: 'Save Image',
+      message: 'Choose the image name and folder.',
+      detail: 'The Recycle Bin is not available as a destination.',
       defaultValue: linkedImageFile?.name ?? defaultImageFileName,
       lockedExtension: imageFileExtension,
       initialFolderId: linkedImageFile?.parentId ?? 'documents',
-      confirmLabel: 'Guardar',
+      confirmLabel: 'Save',
       blockedFolderIds: [recycleBinFolderId],
       validate: validateFileName,
     });
@@ -1497,7 +1497,7 @@ export function PaintApp({ launchData, windowId }) {
     }
 
     try {
-      const fileName = joinFileName(saveData.name.trim() || 'dibujo', imageFileExtension);
+      const fileName = joinFileName(saveData.name.trim() || 'drawing', imageFileExtension);
       const imageContent = canvas.toDataURL('image/png');
 
       if (
@@ -1519,7 +1519,7 @@ export function PaintApp({ launchData, windowId }) {
         conflictNode,
         fileName,
         showChoiceDialog,
-        title: 'Guardar imagen',
+        title: 'Save Image',
       });
 
       if (conflictChoice === 'cancel') {
@@ -1579,15 +1579,15 @@ export function PaintApp({ launchData, windowId }) {
       const canOverwriteLinkedFile = Boolean(linkedImageFileRef.current);
       const choice = await showChoiceDialog({
         title: 'Paint',
-        message: 'Quieres guardar los cambios del dibujo?',
-        detail: 'Si cierras o reemplazas el lienzo sin guardar, los cambios recientes se perderan.',
+        message: 'Do you want to save changes to this drawing?',
+        detail: 'If you close or replace the canvas without saving, the latest changes will be lost.',
         icon: 'warning',
         cancelValue: 'cancel',
         choices: [
-          { label: 'Guardar', value: 'save', autoFocus: true },
-          ...(canOverwriteLinkedFile ? [{ label: 'Guardar como', value: 'saveAs' }] : []),
-          { label: 'No guardar', value: 'discard' },
-          { label: 'Cancelar', value: 'cancel' },
+          { label: 'Save', value: 'save', autoFocus: true },
+          ...(canOverwriteLinkedFile ? [{ label: 'Save As', value: 'saveAs' }] : []),
+          { label: "Don't Save", value: 'discard' },
+          { label: 'Cancel', value: 'cancel' },
         ],
       });
 
@@ -1732,8 +1732,8 @@ export function PaintApp({ launchData, windowId }) {
       onKeyDown={handlePaintKeyDown}
       onPointerDownCapture={focusPaint}
     >
-      <div className="ros-app-toolbar ros-paint-toolbar" aria-label="Herramientas de Paint">
-        <div className="ros-paint-tool-group" role="group" aria-label="Herramientas">
+      <div className="ros-app-toolbar ros-paint-toolbar" aria-label="Paint tools">
+        <div className="ros-paint-tool-group" role="group" aria-label="Tools">
           {enabledToolEntries.map(([tool, label]) => (
             <button
               className="ros-app-toolbar-button ros-paint-tool-button"
@@ -1750,7 +1750,7 @@ export function PaintApp({ launchData, windowId }) {
 
         <span className="ros-app-toolbar-separator" aria-hidden="true" />
 
-        <div className="ros-paint-palette" role="group" aria-label="Colores">
+        <div className="ros-paint-palette" role="group" aria-label="Colors">
           {paintColors.map((color) => (
             <button
               className="ros-paint-color"
@@ -1770,14 +1770,14 @@ export function PaintApp({ launchData, windowId }) {
             className="ros-paint-native-color"
             type="color"
             value={activeColor}
-            aria-label="Elegir color"
+            aria-label="Choose color"
             onChange={(event) => selectColor(event.target.value)}
           />
           <input
             className="ros-paint-hex-input"
             value={hexColor}
             spellCheck="false"
-            aria-label="Color hexadecimal"
+            aria-label="Hex color"
             onBlur={commitHexColor}
             onChange={(event) => handleHexColorChange(event.target.value)}
             onKeyDown={(event) => {
@@ -1799,14 +1799,14 @@ export function PaintApp({ launchData, windowId }) {
             className="ros-paint-text-controls"
             data-paint-text-controls="true"
             role="group"
-            aria-label="Opciones de texto"
+            aria-label="Text options"
             onBlur={handleTextEditorBlur}
           >
             <label>
-              <span>Fuente</span>
+              <span>Font</span>
               <select
                 value={textFontFamily}
-                aria-label="Fuente de texto"
+                aria-label="Text font"
                 onChange={(event) => {
                   const nextFontFamily = event.target.value;
 
@@ -1825,13 +1825,13 @@ export function PaintApp({ launchData, windowId }) {
             </label>
 
             <label>
-              <span>Tamano</span>
+              <span>Size</span>
               <input
                 type="number"
                 min={minTextSize}
                 max={maxTextSize}
                 value={textSizeDraft}
-                aria-label="Tamano de texto"
+                aria-label="Text size"
                 onBlur={(event) => applyTextSize(event.currentTarget.value)}
                 onChange={(event) => setTextSizeDraft(event.target.value)}
                 onKeyDown={(event) => {
@@ -1885,7 +1885,7 @@ export function PaintApp({ launchData, windowId }) {
           </div>
         ) : (
           <label className="ros-paint-size-control">
-            <span>Grosor</span>
+            <span>Thickness</span>
             <input
               type="range"
               min="1"
@@ -1902,7 +1902,7 @@ export function PaintApp({ launchData, windowId }) {
             className="ros-app-toolbar-button ros-paint-zoom-step-button"
             type="button"
             disabled={!canZoomOut}
-            aria-label="Alejar"
+            aria-label="Zoom out"
             onClick={() => stepManualZoom(-1)}
           >
             -
@@ -1914,7 +1914,7 @@ export function PaintApp({ launchData, windowId }) {
             max={maxZoomPercent}
             step={zoomSliderStep}
             value={zoomSliderValue}
-            aria-label="Nivel de zoom"
+            aria-label="Zoom level"
             onChange={(event) =>
               setManualZoom(event.target.value, {
                 playSound: false,
@@ -1925,7 +1925,7 @@ export function PaintApp({ launchData, windowId }) {
             className="ros-app-toolbar-button ros-paint-zoom-step-button"
             type="button"
             disabled={!canZoomIn}
-            aria-label="Acercar"
+            aria-label="Zoom in"
             onClick={() => stepManualZoom(1)}
           >
             +
@@ -1952,18 +1952,18 @@ export function PaintApp({ launchData, windowId }) {
             aria-pressed={zoomMode === 'fit'}
             onClick={setFitZoom}
           >
-            Ajustar
+            Fit
           </button>
         </div>
 
-        <div className="ros-paint-canvas-size-control" role="group" aria-label="Tamano del lienzo">
-          <span>Lienzo</span>
+        <div className="ros-paint-canvas-size-control" role="group" aria-label="Canvas size">
+          <span>Canvas</span>
           <input
             type="number"
             min={minCanvasSize.width}
             max={maxCanvasSize.width}
             value={canvasSizeDraft.width}
-            aria-label="Ancho del lienzo"
+            aria-label="Canvas width"
             onChange={(event) =>
               setCanvasSizeDraft((currentDraft) => ({ ...currentDraft, width: event.target.value }))
             }
@@ -1980,7 +1980,7 @@ export function PaintApp({ launchData, windowId }) {
             min={minCanvasSize.height}
             max={maxCanvasSize.height}
             value={canvasSizeDraft.height}
-            aria-label="Alto del lienzo"
+            aria-label="Canvas height"
             onChange={(event) =>
               setCanvasSizeDraft((currentDraft) => ({ ...currentDraft, height: event.target.value }))
             }
@@ -1992,26 +1992,26 @@ export function PaintApp({ launchData, windowId }) {
             }}
           />
           <button className="ros-app-toolbar-button" type="button" onClick={applyCanvasSize}>
-            Aplicar
+            Apply
           </button>
         </div>
 
         <span className="ros-app-toolbar-separator" aria-hidden="true" />
 
         <button className="ros-app-toolbar-button" type="button" onClick={() => void saveCanvasToRosoOs()}>
-          Guardar
+          Save
         </button>
 
         <button className="ros-app-toolbar-button" type="button" onClick={() => void saveCanvasToRosoOs(true)}>
-          Guardar como
+          Save As
         </button>
 
         <button className="ros-app-toolbar-button" type="button" disabled={!canUndo} onClick={undoLastAction}>
-          Deshacer
+          Undo
         </button>
 
         <button className="ros-app-toolbar-button" type="button" onClick={clearCanvas}>
-          Limpiar
+          Clear
         </button>
       </div>
 
@@ -2034,7 +2034,7 @@ export function PaintApp({ launchData, windowId }) {
               data-tool={resolvedActiveTool}
               ref={canvasRef}
               style={resolvedActiveTool !== 'eraser' ? { cursor: getCanvasCursor(resolvedActiveTool, activeColor) } : undefined}
-              aria-label="Lienzo de Paint"
+              aria-label="Paint canvas"
               onPointerDown={handlePointerDown}
               onPointerMove={handlePointerMove}
               onPointerUp={stopDrawing}
@@ -2068,7 +2068,7 @@ export function PaintApp({ launchData, windowId }) {
                     fontSize: `${visibleTextDraft.fontSize * effectiveZoom}px`,
                     lineHeight: `${Math.round(visibleTextDraft.lineHeight * effectiveZoom)}px`,
                   }}
-                  aria-label="Texto para insertar"
+                  aria-label="Text to insert"
                   onBlur={handleTextEditorBlur}
                   onChange={(event) => {
                     const currentDraft = textDraftRef.current;
@@ -2099,7 +2099,7 @@ export function PaintApp({ launchData, windowId }) {
                 <button
                   className="ros-paint-text-resize-handle"
                   type="button"
-                  aria-label="Redimensionar caja de texto"
+                  aria-label="Resize text box"
                   tabIndex={-1}
                   onPointerDown={startTextBoxResize}
                   onPointerMove={resizeTextBox}
@@ -2115,12 +2115,12 @@ export function PaintApp({ launchData, windowId }) {
 
       <div className="ros-paint-status" aria-live="polite">
         <span>{toolLabels[resolvedActiveTool]}</span>
-        <span>{resolvedActiveTool === 'eraser' ? 'Blanco' : activeColor}</span>
+        <span>{resolvedActiveTool === 'eraser' ? 'White' : activeColor}</span>
         <span>{resolvedActiveTool === 'text' ? `${textSize}px` : `${brushSize}px`}</span>
         <span>{`${canvasSize.width} x ${canvasSize.height}`}</span>
-        <span>{zoomMode === 'fit' ? `Ajustar ${effectiveZoomPercent}%` : `${zoomPercent}%`}</span>
-        <span>{linkedImageFile?.name ?? 'Sin titulo'}</span>
-        <span>{hasUnsavedChanges ? 'Sin guardar' : 'Guardado'}</span>
+        <span>{zoomMode === 'fit' ? `Fit ${effectiveZoomPercent}%` : `${zoomPercent}%`}</span>
+        <span>{linkedImageFile?.name ?? 'Untitled'}</span>
+        <span>{hasUnsavedChanges ? 'Unsaved' : 'Saved'}</span>
       </div>
     </div>
   );

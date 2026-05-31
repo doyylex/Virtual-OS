@@ -21,13 +21,13 @@ export function WindowControls({
   return (
     <div
       className="ros-window-controls"
-      aria-label="Controles de ventana"
+      aria-label="Window controls"
       onPointerDown={(event) => event.stopPropagation()}
     >
       <button
         className="ros-window-control ros-window-control-minimize"
         type="button"
-        aria-label="Minimizar"
+        aria-label="Minimize"
         onClick={(event) => {
           void handleControlClick(event, onMinimize, 'minimize');
         }}
@@ -37,7 +37,7 @@ export function WindowControls({
       <button
         className="ros-window-control ros-window-control-maximize"
         type="button"
-        aria-label={isMaximized ? 'Restaurar' : 'Maximizar'}
+        aria-label={isMaximized ? 'Restore' : 'Maximize'}
         onClick={(event) => {
           void handleControlClick(event, isMaximized ? onRestore : onMaximize, 'restore');
         }}
@@ -47,7 +47,7 @@ export function WindowControls({
       <button
         className="ros-window-control ros-window-control-close"
         type="button"
-        aria-label="Cerrar"
+        aria-label="Close"
         onClick={(event) => {
           void handleControlClick(event, onClose, 'close');
         }}

@@ -9,14 +9,13 @@ import { useUiStore } from '../store/useUiStore.js';
 import { useWindowStore } from '../store/useWindowStore.js';
 
 const systemLinks = [
-  { label: 'Mis documentos', iconTone: 'folder', appId: 'explorer', launchData: { folderId: 'documents' } },
-  { label: 'Mi PC', iconTone: 'computer', appId: 'computer' },
-  { label: 'Bloc de notas', iconTone: 'notepad', appId: 'notepad' },
+  { label: 'My Documents', iconTone: 'folder', appId: 'explorer', launchData: { folderId: 'documents' } },
+  { label: 'My Computer', iconTone: 'computer', appId: 'computer' },
+  { label: 'Notepad', iconTone: 'notepad', appId: 'notepad' },
   { label: 'Terminal', iconTone: 'terminal', appId: 'terminal' },
-  { label: 'Calculadora', iconTone: 'calculator', appId: 'calculator' },
-  { label: 'Panel de control', iconTone: 'settings', appId: 'settings' },
-  { label: 'Buscar', iconTone: 'search', appId: 'explorer', launchData: { folderId: 'root', searchMode: true } },
-  { label: 'Ayuda y soporte tecnico', iconTone: 'help' },
+  { label: 'Calculator', iconTone: 'calculator', appId: 'calculator' },
+  { label: 'Control Panel', iconTone: 'settings', appId: 'settings' },
+  { label: 'Search', iconTone: 'search', appId: 'explorer', launchData: { folderId: 'root', searchMode: true } },
 ];
 
 const matchesSearch = (query, ...values) =>
@@ -79,7 +78,7 @@ function StartMenuContent() {
             return firstResult.node.type === 'folder' ? -1 : 1;
           }
 
-          return firstResult.node.name.localeCompare(secondResult.node.name, 'es');
+          return firstResult.node.name.localeCompare(secondResult.node.name, 'en');
         })
     : [];
   const filteredFileNodeResults = matchingFileNodeResults.slice(0, 5);
@@ -148,29 +147,29 @@ function StartMenuContent() {
   };
 
   return (
-    <nav className="ros-start-menu" aria-label="Menu inicio">
+    <nav className="ros-start-menu" aria-label="Start menu">
       <header className="ros-start-menu-header">
         <div className="ros-user-picture" aria-hidden="true">R</div>
         <div>
           <p className="ros-user-name">Roso</p>
-          <p className="ros-user-status">Sesion local</p>
+          <p className="ros-user-status">Local session</p>
         </div>
       </header>
 
       <div className="ros-start-menu-body">
-        <section className="ros-start-menu-column" aria-label="Programas fijados">
+        <section className="ros-start-menu-column" aria-label="Pinned Programs">
           <label className="ros-start-search">
-            <span>Buscar</span>
+            <span>Search</span>
             <input
               value={searchQuery}
-              placeholder="Apps, archivos..."
+              placeholder="Apps, files..."
               autoComplete="off"
               spellCheck="false"
               onChange={(event) => handleSearchChange(event.target.value)}
               onKeyDown={handleSearchSubmit}
             />
           </label>
-          <p className="ros-menu-section-title">{normalizedSearchQuery ? 'Resultados' : 'Programas fijados'}</p>
+          <p className="ros-menu-section-title">{normalizedSearchQuery ? 'Results' : 'Pinned Programs'}</p>
           {filteredApps.map((app) => (
             <button
               className="ros-menu-item"
@@ -187,7 +186,7 @@ function StartMenuContent() {
           ))}
           {filteredFileNodeResults.length > 0 ? (
             <>
-              <p className="ros-menu-section-title">Archivos y carpetas</p>
+              <p className="ros-menu-section-title">Files and folders</p>
               {filteredFileNodeResults.map(({ node, parentPathLabel }) => (
                 <button
                   className="ros-menu-item"
@@ -205,7 +204,7 @@ function StartMenuContent() {
             </>
           ) : null}
           {normalizedSearchQuery && !hasSearchResults ? (
-            <p className="ros-menu-empty">No hay resultados.</p>
+            <p className="ros-menu-empty">No results.</p>
           ) : null}
           {normalizedSearchQuery ? (
             <button
@@ -213,7 +212,7 @@ function StartMenuContent() {
               type="button"
               onClick={() => handleOpenApp('explorer', { folderId: 'root', searchQuery: searchQuery.trim() }, 'search')}
             >
-              Buscar archivos
+              Search files
               <span aria-hidden="true">&gt;</span>
             </button>
           ) : (
@@ -226,12 +225,12 @@ function StartMenuContent() {
                 playSound('click');
               }}
             >
-              Todos los programas
+              All Programs
               <span aria-hidden="true">&gt;</span>
             </button>
           )}
           {isAllProgramsOpen && !normalizedSearchQuery ? (
-            <div className="ros-programs-panel" aria-label="Todos los programas">
+            <div className="ros-programs-panel" aria-label="All Programs">
               {searchableApps.map((app) => (
                 <button className="ros-menu-item ros-menu-item-compact" key={app.id} type="button" onClick={() => handleOpenApp(app.id)}>
                   <span className="ros-menu-item-icon" data-kind={app.iconTone} aria-hidden="true" />
@@ -242,7 +241,7 @@ function StartMenuContent() {
           ) : null}
         </section>
 
-        <section className="ros-start-menu-column ros-start-menu-column-alt" aria-label="Accesos del sistema">
+        <section className="ros-start-menu-column ros-start-menu-column-alt" aria-label="System Shortcuts">
           {filteredSystemLinks.map((link) => (
             <button
               className="ros-menu-item ros-menu-item-secondary"
@@ -260,11 +259,6 @@ function StartMenuContent() {
           ))}
         </section>
       </div>
-
-      <footer className="ros-start-menu-footer">
-        <button className="ros-session-button" type="button">Cerrar sesion</button>
-        <button className="ros-session-button ros-session-button-danger" type="button">Apagar</button>
-      </footer>
     </nav>
   );
 }

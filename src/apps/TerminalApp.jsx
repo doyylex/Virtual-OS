@@ -6,7 +6,7 @@ import { useUiStore } from '../store/useUiStore.js';
 import { useWindowStore } from '../store/useWindowStore.js';
 
 const initialHistory = [
-  { type: 'system', lines: ['Roso OS Terminal [Version 0.4.0]', 'Escribe help para ver comandos.'] },
+  { type: 'system', lines: ['Roso OS Terminal [Version 0.4.0]', 'Type help to see commands.'] },
 ];
 
 export function TerminalApp({ windowId }) {
@@ -189,7 +189,7 @@ export function TerminalApp({ windowId }) {
 
   return (
     <div className="ros-terminal-app" onClick={() => inputRef.current?.focus()}>
-      <div className="ros-terminal-output" aria-label="Salida de Terminal">
+      <div className="ros-terminal-output" aria-label="Terminal output">
         {history.map((entry, entryIndex) => (
           <div className={`ros-terminal-entry ros-terminal-entry-${entry.type}`} key={`${entry.type}-${entryIndex}`}>
             {entry.lines.map((line, lineIndex) => (

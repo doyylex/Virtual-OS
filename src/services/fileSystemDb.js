@@ -1,5 +1,5 @@
 const DB_NAME = 'roso-os-file-system';
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 const NODE_STORE_NAME = 'nodes';
 const DESKTOP_LAYOUT_STORE_NAME = 'desktopLayout';
 const DESKTOP_LAYOUT_KEY = 'positions';
@@ -19,7 +19,7 @@ const rootNodes = [
     id: 'documents',
     parentId: 'root',
     type: 'folder',
-    name: 'Mis documentos',
+    name: 'My Documents',
     createdAt: 0,
     updatedAt: 0,
   },
@@ -27,7 +27,7 @@ const rootNodes = [
     id: DESKTOP_FOLDER_ID,
     parentId: 'root',
     type: 'folder',
-    name: 'Escritorio',
+    name: 'Desktop',
     createdAt: 0,
     updatedAt: 0,
   },
@@ -43,7 +43,7 @@ const rootNodes = [
     id: RECYCLE_BIN_FOLDER_ID,
     parentId: 'root',
     type: 'folder',
-    name: 'Papelera',
+    name: 'Recycle Bin',
     createdAt: 0,
     updatedAt: 0,
   },
@@ -51,8 +51,8 @@ const rootNodes = [
     id: 'readme-file',
     parentId: 'documents',
     type: 'file',
-    name: 'bienvenida.txt',
-    content: 'Bienvenido a Roso OS.\\n\\nEste archivo vive en IndexedDB.',
+    name: 'welcome.txt',
+    content: 'Welcome to Roso OS.\\n\\nThis file lives in IndexedDB.',
     createdAt: 0,
     updatedAt: 0,
   },
@@ -61,7 +61,7 @@ const rootNodes = [
     parentId: 'documents',
     type: 'file',
     name: 'portfolio.txt',
-    content: 'Portfolio en construccion.\\nPronto este entorno tendra proyectos y archivos reales.',
+    content: 'Portfolio under construction.\\nThis environment will soon have real projects and files.',
     createdAt: 0,
     updatedAt: 0,
   },
@@ -90,6 +90,22 @@ const getValidTimestamp = (timestamp, fallback) => {
   return Number.isFinite(time) && time > 0 ? time : fallback;
 };
 
+const protectedSystemNodeNames = {
+  documents: 'My Documents',
+  [DESKTOP_FOLDER_ID]: 'Desktop',
+  [RECYCLE_BIN_FOLDER_ID]: 'Recycle Bin',
+};
+
+const seedFileMigrations = {
+  'readme-file': {
+    name: 'welcome.txt',
+    content: 'Welcome to Roso OS.\\n\\nThis file lives in IndexedDB.',
+  },
+  'portfolio-file': {
+    content: 'Portfolio under construction.\\nThis environment will soon have real projects and files.',
+  },
+};
+
 const normalizeNode = (node, now) => {
   const createdAt = getValidTimestamp(node.createdAt, now);
   const updatedAt = getValidTimestamp(node.updatedAt, createdAt);
@@ -98,6 +114,25 @@ const normalizeNode = (node, now) => {
     createdAt,
     updatedAt,
   };
+  const protectedName = protectedSystemNodeNames[normalizedNode.id];
+  const seedFileMigration = seedFileMigrations[normalizedNode.id];
+
+  if (protectedName && normalizedNode.name !== protectedName) {
+    normalizedNode.name = protectedName;
+    normalizedNode.updatedAt = now;
+  }
+
+  if (seedFileMigration) {
+    if (seedFileMigration.name && normalizedNode.name !== seedFileMigration.name) {
+      normalizedNode.name = seedFileMigration.name;
+      normalizedNode.updatedAt = now;
+    }
+
+    if (seedFileMigration.content && normalizedNode.content !== seedFileMigration.content) {
+      normalizedNode.content = seedFileMigration.content;
+      normalizedNode.updatedAt = now;
+    }
+  }
 
   if (normalizedNode.parentId === RECYCLE_BIN_FOLDER_ID) {
     normalizedNode.trashedAt = getValidTimestamp(normalizedNode.trashedAt, updatedAt);

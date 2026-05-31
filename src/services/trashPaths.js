@@ -34,7 +34,7 @@ const getRelativeParentNames = (nodes, trashRootId, node) => {
 };
 
 export const getOriginalLocationLabel = (node, nodes, getPath) => {
-  const fallback = 'No disponible, se restaurara en Escritorio';
+  const fallback = 'Not available, will be restored to Desktop';
   const trashRoot = node ? getTrashRootNode(nodes, node.id) : null;
 
   if (!trashRoot?.originalParentId) {

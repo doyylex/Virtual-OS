@@ -1,5 +1,3 @@
-import { getQuickLaunchApps } from '../apps/appRegistry.js';
-import { useSystemSound } from '../hooks/useSystemSound.js';
 import { Clock } from './Clock.jsx';
 import { StartButton } from './StartButton.jsx';
 import { StartMenu } from './StartMenu.jsx';
@@ -8,37 +6,18 @@ import { useWindowStore } from '../store/useWindowStore.js';
 
 export function Taskbar() {
   const windows = useWindowStore((state) => state.windows);
-  const openApp = useWindowStore((state) => state.openApp);
-  const playSound = useSystemSound();
-  const quickLaunchApps = getQuickLaunchApps();
 
   return (
-    <footer className="ros-taskbar" aria-label="Barra de tareas">
+    <footer className="ros-taskbar" aria-label="Taskbar">
       <StartMenu />
       <StartButton />
-      <div className="ros-quick-launch" aria-label="Inicio rapido">
-        {quickLaunchApps.map((app) => (
-          <button
-            className="ros-quick-launch-button"
-            data-tone={app.iconTone}
-            key={app.id}
-            type="button"
-            aria-label={`Abrir ${app.title}`}
-            title={app.title}
-            onClick={() => {
-              openApp(app.id);
-              playSound('open');
-            }}
-          />
-        ))}
-      </div>
-      <div className="ros-taskbar-windows" aria-label="Ventanas en ejecucion">
+      <div className="ros-taskbar-windows" aria-label="Running windows">
         {windows.map((windowItem) => (
           <TaskbarButton key={windowItem.id} windowItem={windowItem} />
         ))}
       </div>
       <div className="ros-taskbar-spacer" />
-      <div className="ros-tray" aria-label="Area de notificacion">
+      <div className="ros-tray" aria-label="Notification area">
         <Clock />
       </div>
     </footer>

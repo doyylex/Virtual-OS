@@ -14,6 +14,14 @@
   position: absolute;
   z-index: 1;
   inset: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.ros-desktop-icons-content {
+  position: relative;
+  min-width: 100%;
+  height: 100%;
 }
 
 .ros-desktop-selection-box {
@@ -21,6 +29,19 @@
   z-index: 1;
   box-sizing: border-box;
   pointer-events: none;
+}
+
+.ros-desktop-refresh-effect {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  pointer-events: none;
+}
+
+.ros-desktop-refresh-effect span {
+  position: absolute;
+  top: 18px;
+  right: 18px;
 }
 
 .ros-window-stage {

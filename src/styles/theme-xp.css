@@ -28,21 +28,21 @@
   transform: rotate(2deg);
 }
 
-.ros-desktop[data-wallpaper='azul'] .ros-wallpaper {
+.ros-desktop[data-wallpaper='blue'] .ros-wallpaper {
   background:
     linear-gradient(135deg, rgba(255, 255, 255, 0.4), transparent 28%),
     radial-gradient(circle at 18% 22%, #8bd5ff 0%, transparent 34%),
     linear-gradient(160deg, #0b4fc4 0%, #25a3f5 54%, #0854b8 100%);
 }
 
-.ros-desktop[data-wallpaper='azul'] .ros-wallpaper::before,
-.ros-desktop[data-wallpaper='azul'] .ros-wallpaper::after,
-.ros-desktop[data-wallpaper='plata'] .ros-wallpaper::before,
-.ros-desktop[data-wallpaper='plata'] .ros-wallpaper::after {
+.ros-desktop[data-wallpaper='blue'] .ros-wallpaper::before,
+.ros-desktop[data-wallpaper='blue'] .ros-wallpaper::after,
+.ros-desktop[data-wallpaper='silver'] .ros-wallpaper::before,
+.ros-desktop[data-wallpaper='silver'] .ros-wallpaper::after {
   display: none;
 }
 
-.ros-desktop[data-wallpaper='plata'] .ros-wallpaper {
+.ros-desktop[data-wallpaper='silver'] .ros-wallpaper {
   background:
     linear-gradient(135deg, rgba(255, 255, 255, 0.72), transparent 38%),
     linear-gradient(160deg, #dce4f2 0%, #99abc7 48%, #647792 100%);
@@ -77,6 +77,61 @@
 
 .ros-desktop[data-file-drop-active='true'] {
   box-shadow: inset 0 0 0 2px rgba(255, 232, 118, 0.9);
+}
+
+.ros-desktop-refresh-effect {
+  background:
+    linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.32) 42%, rgba(255, 255, 255, 0.62) 50%, rgba(255, 255, 255, 0.28) 58%, transparent 100%),
+    rgba(44, 121, 244, 0.08);
+  background-size: 36% 100%, 100% 100%;
+  background-position: -42% 0, 0 0;
+  animation: ros-desktop-refresh-sweep 620ms ease-out both;
+}
+
+.ros-desktop-refresh-effect span {
+  padding: 5px 10px;
+  color: #fff;
+  background: linear-gradient(180deg, rgba(62, 128, 240, 0.96), rgba(20, 82, 189, 0.96));
+  border: 1px solid rgba(213, 230, 255, 0.86);
+  border-radius: 3px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.28), inset 1px 1px 0 rgba(255, 255, 255, 0.42);
+  font-size: 12px;
+  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.35);
+  animation: ros-desktop-refresh-badge 620ms ease-out both;
+}
+
+@keyframes ros-desktop-refresh-sweep {
+  0% {
+    opacity: 0;
+    background-position: -42% 0, 0 0;
+  }
+
+  18% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+    background-position: 142% 0, 0 0;
+  }
+}
+
+@keyframes ros-desktop-refresh-badge {
+  0% {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+
+  18%,
+  72% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
 }
 
 .ros-file-list[data-file-drop-active='true'] {
@@ -568,8 +623,7 @@
   box-shadow: var(--ros-shadow-window);
 }
 
-.ros-start-menu-header,
-.ros-start-menu-footer {
+.ros-start-menu-header {
   color: var(--ros-white);
   background: linear-gradient(180deg, #2c79f4 0%, #245edb 50%, #174bb9 100%);
 }
@@ -836,15 +890,6 @@
 
 .ros-programs-panel {
   border-top: 1px solid #d8d2bd;
-}
-
-.ros-session-button {
-  background: linear-gradient(180deg, #ffb45b, #df6d1d);
-  box-shadow: var(--ros-shadow-control);
-}
-
-.ros-session-button-danger {
-  background: linear-gradient(180deg, #f86a5c, #c92f23);
 }
 
 .ros-taskbar-button {
@@ -1373,11 +1418,11 @@
   background: linear-gradient(180deg, #63b6ff 0 52%, #62c64d 53% 100%);
 }
 
-.ros-wallpaper-preview[data-wallpaper='azul'] {
+.ros-wallpaper-preview[data-wallpaper='blue'] {
   background: linear-gradient(135deg, #0b4fc4, #25a3f5 54%, #0854b8);
 }
 
-.ros-wallpaper-preview[data-wallpaper='plata'] {
+.ros-wallpaper-preview[data-wallpaper='silver'] {
   background: linear-gradient(135deg, #dce4f2, #99abc7 48%, #647792);
 }
 
@@ -1798,7 +1843,7 @@
   }
 }
 
-/* Ocultar elementos de interfaz predeterminados de JS-DOS */
+/* Ocultar items de interfaz predeterminados de JS-DOS */
 .jsdos-sidebar,
 .jsdos-sidebar-panel,
 .jsdos-control-bar,

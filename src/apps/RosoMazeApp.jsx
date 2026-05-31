@@ -55,10 +55,10 @@ const levels = [
     ],
     playerStart: { x: 9, y: 7 },
     enemyStarts: [
-      { id: 'red', name: 'Rojo', color: '#ff0000', eyeColor: '#3d0000', strategy: 'chase', direction: movementByKey.arrowleft, x: 17, y: 7 },
+      { id: 'red', name: 'Red', color: '#ff0000', eyeColor: '#3d0000', strategy: 'chase', direction: movementByKey.arrowleft, x: 17, y: 7 },
       { id: 'rose', name: 'Rosi', color: '#ff5fa8', eyeColor: '#2d001f', strategy: 'chase', direction: movementByKey.arrowright, x: 9, y: 3 },
       { id: 'cyan', name: 'Ciro', color: '#00e9ff', eyeColor: '#002d37', strategy: 'ambush', direction: movementByKey.arrowleft, x: 9, y: 11 },
-      { id: 'amber', name: 'Ambar', color: '#ffb000', eyeColor: '#362000', strategy: 'patrol', direction: movementByKey.arrowup, x: 1, y: 7 },
+      { id: 'amber', name: 'Amber', color: '#ffb000', eyeColor: '#362000', strategy: 'patrol', direction: movementByKey.arrowup, x: 1, y: 7 },
     ]
   },
   {
@@ -81,10 +81,10 @@ const levels = [
     ],
     playerStart: { x: 9, y: 7 },
     enemyStarts: [
-      { id: 'red', name: 'Rojo', color: '#ff0000', eyeColor: '#3d0000', strategy: 'chase', direction: movementByKey.arrowleft, x: 17, y: 7 },
+      { id: 'red', name: 'Red', color: '#ff0000', eyeColor: '#3d0000', strategy: 'chase', direction: movementByKey.arrowleft, x: 17, y: 7 },
       { id: 'rose', name: 'Rosi', color: '#ff5fa8', eyeColor: '#2d001f', strategy: 'chase', direction: movementByKey.arrowright, x: 9, y: 3 },
       { id: 'cyan', name: 'Ciro', color: '#00e9ff', eyeColor: '#002d37', strategy: 'ambush', direction: movementByKey.arrowleft, x: 9, y: 11 },
-      { id: 'amber', name: 'Ambar', color: '#ffb000', eyeColor: '#362000', strategy: 'patrol', direction: movementByKey.arrowup, x: 1, y: 7 },
+      { id: 'amber', name: 'Amber', color: '#ffb000', eyeColor: '#362000', strategy: 'patrol', direction: movementByKey.arrowup, x: 1, y: 7 },
     ]
   },
   {
@@ -107,10 +107,10 @@ const levels = [
     ],
     playerStart: { x: 9, y: 7 },
     enemyStarts: [
-      { id: 'red', name: 'Rojo', color: '#ff0000', eyeColor: '#3d0000', strategy: 'chase', direction: movementByKey.arrowleft, x: 17, y: 7 },
+      { id: 'red', name: 'Red', color: '#ff0000', eyeColor: '#3d0000', strategy: 'chase', direction: movementByKey.arrowleft, x: 17, y: 7 },
       { id: 'rose', name: 'Rosi', color: '#ff5fa8', eyeColor: '#2d001f', strategy: 'chase', direction: movementByKey.arrowright, x: 9, y: 3 },
       { id: 'cyan', name: 'Ciro', color: '#00e9ff', eyeColor: '#002d37', strategy: 'ambush', direction: movementByKey.arrowleft, x: 9, y: 11 },
-      { id: 'amber', name: 'Ambar', color: '#ffb000', eyeColor: '#362000', strategy: 'patrol', direction: movementByKey.arrowup, x: 1, y: 7 },
+      { id: 'amber', name: 'Amber', color: '#ffb000', eyeColor: '#362000', strategy: 'patrol', direction: movementByKey.arrowup, x: 1, y: 7 },
     ]
   }
 ];
@@ -653,7 +653,7 @@ const getCollidingEnemyIds = (enemies, player) =>
 
 const getStatusLabel = (status) => {
   if (status === 'won') {
-    return 'Victoria';
+    return 'Victory';
   }
 
   if (status === 'gameover') {
@@ -661,14 +661,14 @@ const getStatusLabel = (status) => {
   }
 
   if (status === 'ready') {
-    return 'Listo';
+    return 'Ready';
   }
 
   if (status === 'level-clear') {
-    return 'Completado';
+    return 'Level clear';
   }
 
-  return 'Jugando';
+  return 'Playing';
 };
 
 const getNextPlayerMovement = (gameState, desiredDirection, deltaSeconds) => {
@@ -957,11 +957,11 @@ const drawMazeBoard = (context, gameState, metrics) => {
   context.fillText(String(gameState.score).padStart(2, '0'), cellSize * 1.25, cellSize * 0.72);
   context.fillText(String(Math.max(gameState.score, 1000)).padStart(4, '0'), cellSize * 8.15, cellSize * 0.72);
   context.textAlign = 'right';
-  context.fillText(`VIDAS ${gameState.lives}`, width - cellSize * 1.1, cellSize * 0.72);
+  context.fillText(`LIVES ${gameState.lives}`, width - cellSize * 1.1, cellSize * 0.72);
 
   if (gameState.powerMs > 0) {
     context.fillStyle = '#4cecff';
-    context.fillText(`PODER ${Math.ceil(gameState.powerMs / 1000)}`, width - cellSize * 1.1, Math.max(2, cellSize * 0.08));
+    context.fillText(`POWER ${Math.ceil(gameState.powerMs / 1000)}`, width - cellSize * 1.1, Math.max(2, cellSize * 0.08));
   }
 
   for (let y = 0; y < activeMazeRowCount; y += 1) {
@@ -1030,10 +1030,10 @@ const drawMazeBoard = (context, gameState, metrics) => {
     context.font = `700 ${Math.max(18, Math.round(cellSize * 1.05))}px Consolas, 'Courier New', monospace`;
     context.textAlign = 'center';
     context.textBaseline = 'middle';
-    context.fillText('NIVEL COMPLETADO', width / 2, height / 2 - cellSize * 0.45);
+    context.fillText('LEVEL CLEAR', width / 2, height / 2 - cellSize * 0.45);
     context.fillStyle = '#f6d7a7';
     context.font = `400 ${Math.max(12, Math.round(cellSize * 0.48))}px Consolas, 'Courier New', monospace`;
-    context.fillText('PREPARANDO SIGUIENTE NIVEL...', width / 2, height / 2 + cellSize * 0.42);
+    context.fillText('PREPARING NEXT LEVEL...', width / 2, height / 2 + cellSize * 0.42);
   }
 
   if (gameState.status === 'won') {
@@ -1043,10 +1043,10 @@ const drawMazeBoard = (context, gameState, metrics) => {
     context.font = `700 ${Math.max(18, Math.round(cellSize * 1.05))}px Consolas, 'Courier New', monospace`;
     context.textAlign = 'center';
     context.textBaseline = 'middle';
-    context.fillText('GANASTE', width / 2, height / 2 - cellSize * 0.45);
+    context.fillText('YOU WIN', width / 2, height / 2 - cellSize * 0.45);
     context.fillStyle = '#f6d7a7';
     context.font = `400 ${Math.max(12, Math.round(cellSize * 0.48))}px Consolas, 'Courier New', monospace`;
-    context.fillText('R PARA REINICIAR', width / 2, height / 2 + cellSize * 0.42);
+    context.fillText('PRESS R TO RESTART', width / 2, height / 2 + cellSize * 0.42);
   }
 
   if (gameState.status === 'gameover') {
@@ -1059,7 +1059,7 @@ const drawMazeBoard = (context, gameState, metrics) => {
     context.fillText('GAME OVER', width / 2, height / 2 - cellSize * 0.45);
     context.fillStyle = '#f6d7a7';
     context.font = `400 ${Math.max(12, Math.round(cellSize * 0.48))}px Consolas, 'Courier New', monospace`;
-    context.fillText('R PARA REINICIAR', width / 2, height / 2 + cellSize * 0.42);
+    context.fillText('PRESS R TO RESTART', width / 2, height / 2 + cellSize * 0.42);
   }
 };
 
@@ -1342,12 +1342,12 @@ export function RosoMazeApp({ windowId }) {
       onKeyDown={handleKeyDown}
       onPointerDownCapture={focusMaze}
     >
-      <div className="ros-app-toolbar ros-maze-toolbar" aria-label="Controles de Pac-Man">
+      <div className="ros-app-toolbar ros-maze-toolbar" aria-label="Pac-Man controls">
         <strong>Pac-Man</strong>
-        <span>Flechas o WASD</span>
-        <span>Movimiento continuo</span>
+        <span>Arrows or WASD</span>
+        <span>Continuous movement</span>
         <button className="ros-app-toolbar-button" type="button" onClick={resetGame}>
-          Reiniciar
+          Restart
         </button>
       </div>
 
@@ -1359,16 +1359,16 @@ export function RosoMazeApp({ windowId }) {
             height: `${metrics.height}px`,
             width: `${metrics.width}px`,
           }}
-          aria-label="Laberinto de Pac-Man"
+          aria-label="Pac-Man maze"
         />
       </div>
 
       <div className="ros-maze-status" aria-live="polite">
-        <span>Nivel: {gameState.levelIndex + 1}/3</span>
-        <span>Puntos: {gameState.score}</span>
-        <span>Vidas: {gameState.lives}</span>
-        <span>Restan: {remainingDots}</span>
-        <span>{gameState.powerMs > 0 ? `Poder: ${powerSeconds}s` : 'Poder: no'}</span>
+        <span>Level: {gameState.levelIndex + 1}/3</span>
+        <span>Score: {gameState.score}</span>
+        <span>Lives: {gameState.lives}</span>
+        <span>Dots: {remainingDots}</span>
+        <span>{gameState.powerMs > 0 ? `Power: ${powerSeconds}s` : 'Power: off'}</span>
         <span>{getStatusLabel(gameState.status)}</span>
       </div>
     </div>

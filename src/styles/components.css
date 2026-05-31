@@ -506,21 +506,6 @@
   border-radius: 4px;
 }
 
-.ros-start-menu-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  padding: 8px 10px;
-}
-
-.ros-session-button {
-  min-height: 28px;
-  padding: 3px 10px;
-  color: var(--ros-white);
-  border-radius: 4px;
-  font-size: 12px;
-}
-
 .ros-all-programs-button {
   display: flex;
   align-items: center;

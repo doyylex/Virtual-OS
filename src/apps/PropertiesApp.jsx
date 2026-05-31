@@ -31,20 +31,20 @@ export function PropertiesApp({ launchData }) {
 
       return {
         title: node.name,
-        type: isInTrash ? 'Elemento en Papelera' : getNodeTypeLabel(node),
-        location: getPathLabel(path.slice(0, -1), 'Escritorio'),
-        createdAt: formatShortDateTime(node.createdAt, 'Sistema'),
-        updatedAt: formatShortDateTime(node.updatedAt, 'Sistema'),
-        extraLabel: node.type === 'folder' ? 'Contiene' : 'Tamano',
-        extraValue: node.type === 'folder' ? `${childrenCount} elementos` : `${size} bytes`,
+        type: isInTrash ? 'Item in Recycle Bin' : getNodeTypeLabel(node),
+        location: getPathLabel(path.slice(0, -1), 'Desktop'),
+        createdAt: formatShortDateTime(node.createdAt, 'System'),
+        updatedAt: formatShortDateTime(node.updatedAt, 'System'),
+        extraLabel: node.type === 'folder' ? 'Contains' : 'Size',
+        extraValue: node.type === 'folder' ? `${childrenCount} items` : `${size} bytes`,
         extraRows: isInTrash
           ? [
               {
-                label: 'Ubicacion original',
+                label: 'Original Location',
                 value: getOriginalLocationLabel(node, nodes, getPath),
               },
               {
-                label: 'Eliminado',
+                label: 'Deleted',
                 value: formatShortDateTime(trashRootNode?.trashedAt),
               },
             ]
@@ -58,11 +58,11 @@ export function PropertiesApp({ launchData }) {
     if (shortcut) {
       return {
         title: shortcut.name,
-        type: 'Acceso directo',
-        location: 'Escritorio',
-        createdAt: 'Sistema',
-        updatedAt: 'Sistema',
-        extraLabel: 'Destino',
+        type: 'Shortcut',
+        location: 'Desktop',
+        createdAt: 'System',
+        updatedAt: 'System',
+        extraLabel: 'Target',
         extraValue: shortcut.description,
         extraRows: [],
         tone: shortcut.kind === 'app' ? 'computer' : 'screen',
@@ -70,13 +70,13 @@ export function PropertiesApp({ launchData }) {
     }
 
     return {
-      title: 'Elemento no disponible',
-      type: 'Desconocido',
+      title: 'Item unavailable',
+      type: 'Unknown',
       location: 'Roso OS',
-      createdAt: 'Sistema',
-      updatedAt: 'Sistema',
-      extraLabel: 'Estado',
-      extraValue: 'No se encontro informacion del elemento.',
+      createdAt: 'System',
+      updatedAt: 'System',
+      extraLabel: 'Status',
+      extraValue: 'No information was found for this item.',
       extraRows: [],
       tone: 'settings',
     };
@@ -94,15 +94,15 @@ export function PropertiesApp({ launchData }) {
 
       <dl className="ros-properties-list">
         <div>
-          <dt>Ubicacion</dt>
+          <dt>Location</dt>
           <dd>{details.location}</dd>
         </div>
         <div>
-          <dt>Creado</dt>
+          <dt>Created</dt>
           <dd>{details.createdAt}</dd>
         </div>
         <div>
-          <dt>Modificado</dt>
+          <dt>Modified</dt>
           <dd>{details.updatedAt}</dd>
         </div>
         <div>

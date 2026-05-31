@@ -7,17 +7,17 @@ import { useFileSystemStore } from '../store/useFileSystemStore.js';
 import { useWindowStore } from '../store/useWindowStore.js';
 
 const initialText = [
-  'Bienvenido a Roso OS.',
+  'Welcome to Roso OS.',
   '',
-  'Este Bloc de notas puede guardar archivos en Escritorio o Mis documentos.',
-  'Los archivos .txt persisten en IndexedDB.',
+  'This Notepad can save files to Desktop or My Documents.',
+  '.txt files persist in IndexedDB.',
 ].join('\n');
 
 const invalidFileNamePattern = /[<>:"/\\|?*]/;
 const recycleBinFolderId = 'recycle-bin-folder';
 const textFileExtension = '.txt';
 
-const validateFileName = (name) => (invalidFileNamePattern.test(name) ? 'El nombre no puede usar caracteres reservados.' : '');
+const validateFileName = (name) => (invalidFileNamePattern.test(name) ? 'The name cannot use reserved characters.' : '');
 
 export function NotepadApp({ launchData, windowId }) {
   const nodes = useFileSystemStore((state) => state.nodes);
@@ -50,7 +50,7 @@ export function NotepadApp({ launchData, windowId }) {
       return;
     }
 
-    setWindowTitle(windowId, `Bloc de notas - ${linkedFile?.name ?? 'Sin titulo'}`);
+    setWindowTitle(windowId, `Notepad - ${linkedFile?.name ?? 'Untitled'}`);
   }, [linkedFile?.name, setWindowTitle, windowId]);
 
   const stats = useMemo(() => {
@@ -89,19 +89,19 @@ export function NotepadApp({ launchData, windowId }) {
 
   const showSaveSuccess = useCallback((fileName) =>
     showAlert({
-      title: 'Bloc de notas',
-      message: 'EXITO AL GUARDAR',
-      detail: fileName ? `${fileName} se guardo en Roso OS.` : '',
-      confirmLabel: 'Aceptar',
+      title: 'Notepad',
+      message: 'SAVED SUCCESSFULLY',
+      detail: fileName ? `${fileName} was saved in Roso OS.` : '',
+      confirmLabel: 'OK',
       icon: 'info',
     }), [showAlert]);
 
   const showSaveError = useCallback((error) =>
     showAlert({
-      title: 'Bloc de notas',
-      message: 'ERROR AL GUARDAR',
-      detail: error?.message ?? 'No se pudo guardar el archivo.',
-      confirmLabel: 'Aceptar',
+      title: 'Notepad',
+      message: 'SAVE ERROR',
+      detail: error?.message ?? 'The file could not be saved.',
+      confirmLabel: 'OK',
       icon: 'warning',
     }), [showAlert]);
 
@@ -121,13 +121,13 @@ export function NotepadApp({ launchData, windowId }) {
       }
 
       const saveData = await showSaveFileDialog({
-        title: 'Guardar como',
-        message: 'Elige el nombre y la carpeta del archivo.',
-        detail: 'La Papelera no esta disponible como destino.',
-        defaultValue: linkedFile?.name ?? 'nota.txt',
+        title: 'Save As',
+        message: 'Choose the file name and folder.',
+        detail: 'The Recycle Bin is not available as a destination.',
+        defaultValue: linkedFile?.name ?? 'note.txt',
         lockedExtension: textFileExtension,
         initialFolderId: getInitialSaveFolderId(),
-        confirmLabel: 'Guardar',
+        confirmLabel: 'Save',
         blockedFolderIds: [recycleBinFolderId],
         validate: validateFileName,
       });
@@ -136,7 +136,7 @@ export function NotepadApp({ launchData, windowId }) {
         return false;
       }
 
-      const fileName = joinFileName(saveData.name.trim() || 'nota', textFileExtension);
+      const fileName = joinFileName(saveData.name.trim() || 'note', textFileExtension);
 
       if (
         linkedFile?.id &&
@@ -156,7 +156,7 @@ export function NotepadApp({ launchData, windowId }) {
         conflictNode,
         fileName,
         showChoiceDialog,
-        title: 'Guardar como',
+        title: 'Save As',
       });
 
       if (conflictChoice === 'cancel') {
@@ -209,15 +209,15 @@ export function NotepadApp({ launchData, windowId }) {
 
     try {
       const choice = await showChoiceDialog({
-        title: 'Bloc de notas',
-        message: 'Quieres guardar los cambios?',
-        detail: 'Si cierras sin guardar, los cambios recientes se perderan.',
+        title: 'Notepad',
+        message: 'Do you want to save your changes?',
+        detail: 'If you close without saving, the latest changes will be lost.',
         icon: 'warning',
         cancelValue: 'cancel',
         choices: [
-          { label: 'Guardar', value: 'save', autoFocus: true },
-          { label: 'No guardar', value: 'discard' },
-          { label: 'Cancelar', value: 'cancel' },
+          { label: 'Save', value: 'save', autoFocus: true },
+          { label: "Don't Save", value: 'discard' },
+          { label: 'Cancel', value: 'cancel' },
         ],
       });
 
@@ -253,11 +253,11 @@ export function NotepadApp({ launchData, windowId }) {
 
   return (
     <div className="ros-notepad-app">
-      <div className="ros-app-toolbar" aria-label="Barra de herramientas de Bloc de notas">
-        <button className="ros-app-toolbar-button" type="button" onClick={() => void handleSave()}>Guardar</button>
-        <button className="ros-app-toolbar-button" type="button" onClick={() => void handleSaveAs()}>Guardar como</button>
-        <button className="ros-app-toolbar-button" type="button" onClick={handleSelectAll}>Seleccionar todo</button>
-        <button className="ros-app-toolbar-button" type="button" onClick={handleClear}>Limpiar</button>
+      <div className="ros-app-toolbar" aria-label="Notepad toolbar">
+        <button className="ros-app-toolbar-button" type="button" onClick={() => void handleSave()}>Save</button>
+        <button className="ros-app-toolbar-button" type="button" onClick={() => void handleSaveAs()}>Save As</button>
+        <button className="ros-app-toolbar-button" type="button" onClick={handleSelectAll}>Select All</button>
+        <button className="ros-app-toolbar-button" type="button" onClick={handleClear}>Clear</button>
       </div>
 
       <textarea
@@ -265,15 +265,15 @@ export function NotepadApp({ launchData, windowId }) {
         className="ros-notepad-editor"
         value={text}
         spellCheck="false"
-        aria-label="Editor de Bloc de notas"
+        aria-label="Notepad editor"
         onChange={(event) => handleTextChange(event.target.value)}
       />
 
       <footer className="ros-notepad-status">
-        <span>{stats.lines} lineas</span>
-        <span>{stats.characters} caracteres</span>
-        <span>{hasUnsavedChanges ? 'Sin guardar' : 'Guardado'}</span>
-        <span>{linkedFile ? linkedFile.name : 'Temporal'}</span>
+        <span>{stats.lines} line{stats.lines === 1 ? '' : 's'}</span>
+        <span>{stats.characters} character{stats.characters === 1 ? '' : 's'}</span>
+        <span>{hasUnsavedChanges ? 'Unsaved' : 'Saved'}</span>
+        <span>{linkedFile ? linkedFile.name : 'Temporary'}</span>
       </footer>
     </div>
   );

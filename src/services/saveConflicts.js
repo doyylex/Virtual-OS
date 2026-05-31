@@ -18,20 +18,20 @@ export const resolveSaveConflict = ({ conflictNode, fileName, showChoiceDialog, 
   }
 
   const isFileConflict = conflictNode.type === 'file';
-  const conflictTypeLabel = isFileConflict ? 'un archivo' : 'una carpeta';
+  const conflictTypeLabel = isFileConflict ? 'a file' : 'a folder';
 
   return showChoiceDialog({
     title,
-    message: `Ya existe ${conflictTypeLabel} llamado "${fileName}".`,
+    message: `There is already ${conflictTypeLabel} named "${fileName}".`,
     detail: isFileConflict
-      ? 'Quieres sobrescribirlo o guardar una copia con otro nombre?'
-      : 'No se puede sobrescribir una carpeta desde esta app. Puedes guardar una copia con otro nombre.',
+      ? 'Do you want to overwrite it or save a copy with another name?'
+      : 'This app cannot overwrite a folder. You can save a copy with another name.',
     icon: 'warning',
     cancelValue: 'cancel',
     choices: [
-      ...(isFileConflict ? [{ label: 'Sobrescribir', value: 'overwrite', autoFocus: true }] : []),
-      { label: 'Crear copia', value: 'copy', autoFocus: !isFileConflict },
-      { label: 'Cancelar', value: 'cancel' },
+      ...(isFileConflict ? [{ label: 'Overwrite', value: 'overwrite', autoFocus: true }] : []),
+      { label: 'Create Copy', value: 'copy', autoFocus: !isFileConflict },
+      { label: 'Cancel', value: 'cancel' },
     ],
   });
 };

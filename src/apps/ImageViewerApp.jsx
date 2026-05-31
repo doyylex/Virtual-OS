@@ -25,7 +25,7 @@ export function ImageViewerApp({ launchData, windowId }) {
       return;
     }
 
-    setWindowTitle(windowId, `Visor de imagenes - ${isSupportedImage ? node.name : 'Archivo no disponible'}`);
+    setWindowTitle(windowId, `Image Viewer - ${isSupportedImage ? node.name : 'File unavailable'}`);
   }, [isSupportedImage, node?.name, setWindowTitle, windowId]);
 
   const openLocation = () => {
@@ -42,12 +42,12 @@ export function ImageViewerApp({ launchData, windowId }) {
 
   return (
     <div className="ros-image-viewer-app">
-      <div className="ros-app-toolbar" aria-label="Herramientas del visor de imagenes">
+      <div className="ros-app-toolbar" aria-label="Image Viewer tools">
         <button className="ros-app-toolbar-button" type="button" disabled={!node?.parentId} onClick={openLocation}>
-          Abrir ubicacion
+          Open location
         </button>
         <button className="ros-app-toolbar-button" type="button" disabled={!isSupportedImage} onClick={editInPaint}>
-          Editar en Paint
+          Edit in Paint
         </button>
       </div>
 
@@ -57,15 +57,15 @@ export function ImageViewerApp({ launchData, windowId }) {
         ) : (
           <div className="ros-image-viewer-empty">
             <span className="ros-file-node-icon ros-file-node-icon-large" data-type="image" aria-hidden="true" />
-            <h2>No se puede abrir la imagen</h2>
-            <p>El archivo no existe o no es una imagen PNG compatible.</p>
+            <h2>Cannot open image</h2>
+            <p>The file does not exist or is not a compatible PNG image.</p>
           </div>
         )}
       </div>
 
       <footer className="ros-image-viewer-status">
-        <span>{node?.name ?? 'Sin archivo'}</span>
-        <span>{isSupportedImage ? getNodeTypeLabel(node) : 'No disponible'}</span>
+        <span>{node?.name ?? 'No file'}</span>
+        <span>{isSupportedImage ? getNodeTypeLabel(node) : 'Unavailable'}</span>
         <span>{getFileSizeLabel(node)}</span>
       </footer>
     </div>

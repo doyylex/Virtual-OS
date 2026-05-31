@@ -13,18 +13,18 @@ export const isImageFileName = (name = '') => ['.png'].includes(getFileExtension
 
 export const getNodeTypeLabel = (node) => {
   if (node?.id === recycleBinFolderId) {
-    return 'Papelera';
+    return 'Recycle Bin';
   }
 
   if (node?.type === 'folder') {
-    return 'Carpeta';
+    return 'Folder';
   }
 
   if (isImageFileName(node?.name)) {
-    return 'Imagen PNG';
+    return 'PNG image';
   }
 
-  return 'Archivo de texto';
+  return 'Text file';
 };
 
 export const getExplorerNodeIconType = (node, trashItemCount = 0) => {

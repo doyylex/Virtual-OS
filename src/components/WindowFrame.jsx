@@ -136,7 +136,7 @@ export function WindowFrame({ app, children, windowItem }) {
         <button
           className="ros-window-title-icon-button"
           type="button"
-          aria-label="Abrir menu de ventana"
+          aria-label="Open window menu"
           onClick={handleTitleIconClick}
           onDoubleClick={(event) => event.stopPropagation()}
           onPointerDown={(event) => event.stopPropagation()}

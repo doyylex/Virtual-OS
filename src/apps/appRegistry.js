@@ -13,8 +13,8 @@ import { DoomApp } from './DoomApp.jsx';
 export const appRegistry = [
   {
     id: 'explorer',
-    title: 'Explorador',
-    description: 'Carpetas y archivos persistentes.',
+    title: 'File Explorer',
+    description: 'Persistent folders and files.',
     iconTone: 'explorer',
     component: FileExplorerApp,
     defaultPosition: { x: 176, y: 92 },
@@ -26,8 +26,8 @@ export const appRegistry = [
   },
   {
     id: 'computer',
-    title: 'Mi PC',
-    description: 'Unidades, lugares del sistema y accesos principales.',
+    title: 'My Computer',
+    description: 'Drives, system locations, and main shortcuts.',
     iconTone: 'computer',
     component: ComputerApp,
     defaultPosition: { x: 154, y: 86 },
@@ -39,8 +39,8 @@ export const appRegistry = [
   },
   {
     id: 'notepad',
-    title: 'Bloc de notas',
-    description: 'Editor de texto simple con guardado local.',
+    title: 'Notepad',
+    description: 'Simple text editor with local saving.',
     iconTone: 'notepad',
     component: NotepadApp,
     defaultPosition: { x: 238, y: 132 },
@@ -53,7 +53,7 @@ export const appRegistry = [
   {
     id: 'terminal',
     title: 'Terminal',
-    description: 'Consola fake con comandos locales.',
+    description: 'Fake console with local commands.',
     iconTone: 'terminal',
     component: TerminalApp,
     defaultPosition: { x: 292, y: 154 },
@@ -65,8 +65,8 @@ export const appRegistry = [
   },
   {
     id: 'calculator',
-    title: 'Calculadora',
-    description: 'Calculadora basica estilo XP.',
+    title: 'Calculator',
+    description: 'Basic XP-style calculator.',
     iconTone: 'calculator',
     component: CalculatorApp,
     defaultPosition: { x: 334, y: 126 },
@@ -79,7 +79,7 @@ export const appRegistry = [
   {
     id: 'paint',
     title: 'Paint',
-    description: 'Dibujo simple con herramientas basicas.',
+    description: 'Simple drawing with basic tools.',
     iconTone: 'paint',
     component: PaintApp,
     defaultPosition: { x: 250, y: 94 },
@@ -92,7 +92,7 @@ export const appRegistry = [
   {
     id: 'roso-maze',
     title: 'Pac-Man',
-    description: 'El clasico juego arcade de Pac-Man en Roso OS.',
+    description: 'The classic Pac-Man arcade game in Roso OS.',
     iconTone: 'game',
     component: RosoMazeApp,
     defaultPosition: { x: 278, y: 104 },
@@ -105,7 +105,7 @@ export const appRegistry = [
   {
     id: 'doom',
     title: 'DOOM',
-    description: 'El clasico juego de disparos en primera persona de 1993.',
+    description: 'The classic 1993 first-person shooter.',
     iconTone: 'doom',
     component: DoomApp,
     defaultPosition: { x: 200, y: 80 },
@@ -117,8 +117,8 @@ export const appRegistry = [
   },
   {
     id: 'image-viewer',
-    title: 'Visor de imagenes',
-    description: 'Abre imagenes PNG guardadas en Roso OS.',
+    title: 'Image Viewer',
+    description: 'Opens PNG images saved in Roso OS.',
     iconTone: 'image',
     component: ImageViewerApp,
     defaultPosition: { x: 286, y: 108 },
@@ -131,8 +131,8 @@ export const appRegistry = [
   },
   {
     id: 'settings',
-    title: 'Panel de control',
-    description: 'Wallpapers, sonido y ajustes visuales.',
+    title: 'Control Panel',
+    description: 'Wallpapers, sound, and visual settings.',
     iconTone: 'settings',
     component: SettingsApp,
     defaultPosition: { x: 214, y: 112 },
@@ -144,8 +144,8 @@ export const appRegistry = [
   },
   {
     id: 'properties',
-    title: 'Propiedades',
-    description: 'Detalles del elemento seleccionado.',
+    title: 'Properties',
+    description: 'Details for the selected item.',
     iconTone: 'settings',
     component: PropertiesApp,
     defaultPosition: { x: 320, y: 156 },

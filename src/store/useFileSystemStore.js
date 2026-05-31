@@ -42,7 +42,7 @@ const sortNodes = (nodes) =>
       return a.type === 'folder' ? -1 : 1;
     }
 
-    return a.name.localeCompare(b.name, 'es');
+    return a.name.localeCompare(b.name, 'en');
   });
 
 const persistNodes = (nodes) => {
@@ -257,7 +257,7 @@ export const useFileSystemStore = create((set, get) => ({
       const nodes = await loadFileSystemNodes();
       set({ nodes, isReady: true, error: null });
     } catch {
-      set({ error: 'No se pudo cargar IndexedDB.', isReady: true });
+      set({ error: 'IndexedDB could not be loaded.', isReady: true });
     }
   },
 
@@ -317,7 +317,7 @@ export const useFileSystemStore = create((set, get) => ({
 
   clearClipboard: () => set({ clipboard: null }),
 
-  createFolder: (parentId, name = 'Nueva carpeta') => {
+  createFolder: (parentId, name = 'New Folder') => {
     let createdId = null;
 
     set((state) => {
@@ -331,7 +331,7 @@ export const useFileSystemStore = create((set, get) => ({
     return createdId;
   },
 
-  createFile: (parentId, name = 'nuevo.txt', content = '') => {
+  createFile: (parentId, name = 'new.txt', content = '') => {
     let createdId = null;
 
     set((state) => {
@@ -345,12 +345,12 @@ export const useFileSystemStore = create((set, get) => ({
     return createdId;
   },
 
-  createFileAsync: async (parentId, name = 'nuevo.txt', content = '') => {
+  createFileAsync: async (parentId, name = 'new.txt', content = '') => {
     const state = get();
     const parent = state.nodes.find((node) => node.id === parentId && node.type === 'folder');
 
     if (!parent || parent.id === recycleBinFolderId || isNodeInsideTrash(state.nodes, parent.id)) {
-      throw new Error('No se puede guardar en esta ubicacion.');
+      throw new Error('Cannot save to this location.');
     }
 
     const nextNodeState = createNode(state, parentId, 'file', name, content);
@@ -360,9 +360,9 @@ export const useFileSystemStore = create((set, get) => ({
     return nextNodeState.id;
   },
 
-  createDesktopFolder: () => get().createFolder(desktopFolderId, 'Nueva carpeta'),
+  createDesktopFolder: () => get().createFolder(desktopFolderId, 'New Folder'),
 
-  createDesktopTextFile: () => get().createFile(desktopFolderId, 'Nuevo documento de texto.txt', ''),
+  createDesktopTextFile: () => get().createFile(desktopFolderId, 'New Text Document.txt', ''),
 
   renameNode: (nodeId, name) =>
     set((state) => {
@@ -821,7 +821,7 @@ export const useFileSystemStore = create((set, get) => ({
     const targetNode = state.nodes.find((node) => node.id === nodeId && node.type === 'file');
 
     if (!targetNode) {
-      throw new Error('El archivo no existe.');
+      throw new Error('The file does not exist.');
     }
 
     const nodes = state.nodes.map((node) =>

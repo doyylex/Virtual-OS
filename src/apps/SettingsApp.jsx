@@ -6,22 +6,22 @@ import { useUiStore } from '../store/useUiStore.js';
 import { useWindowStore } from '../store/useWindowStore.js';
 
 const wallpaperOptions = [
-  { id: 'bliss', label: 'Bliss', description: 'Colinas verdes y cielo azul clasico.' },
-  { id: 'azul', label: 'Azul', description: 'Fondo limpio para concentrarse.' },
-  { id: 'plata', label: 'Plata', description: 'Tono claro inspirado en el tema Silver.' },
+  { id: 'bliss', label: 'Bliss', description: 'Classic green hills and blue sky.' },
+  { id: 'blue', label: 'Blue', description: 'Clean background for focus.' },
+  { id: 'silver', label: 'Silver', description: 'Light tone inspired by the Silver theme.' },
 ];
 
 const soundPackLabels = {
-  xp: 'XP clasico',
-  soft: 'Suave',
+  xp: 'Classic XP',
+  soft: 'Soft',
   terminal: 'Terminal',
 };
 
 const testSounds = [
   { id: 'click', label: 'Click' },
   { id: 'error', label: 'Error' },
-  { id: 'start', label: 'Inicio' },
-  { id: 'save', label: 'Guardar' },
+  { id: 'start', label: 'Start' },
+  { id: 'save', label: 'Save' },
 ];
 
 export function SettingsApp() {
@@ -61,19 +61,19 @@ export function SettingsApp() {
     <div className="ros-settings-app">
       <section className="ros-settings-section">
         <header>
-          <h1>Panel de control</h1>
-          <p>Ajustes visuales, sonido y estado del sistema.</p>
+          <h1>Control Panel</h1>
+          <p>Visual, sound, and system settings.</p>
         </header>
 
-        <div className="ros-settings-tabs" role="tablist" aria-label="Secciones de Panel de control">
+        <div className="ros-settings-tabs" role="tablist" aria-label="Control Panel sections">
           <button type="button" role="tab" aria-selected={activeTab === 'appearance'} onClick={() => handleTabClick('appearance')}>
-            Apariencia
+            Appearance
           </button>
           <button type="button" role="tab" aria-selected={activeTab === 'sound'} onClick={() => handleTabClick('sound')}>
-            Sonido
+            Sound
           </button>
           <button type="button" role="tab" aria-selected={activeTab === 'system'} onClick={() => handleTabClick('system')}>
-            Sistema
+            System
           </button>
         </div>
 
@@ -105,7 +105,7 @@ export function SettingsApp() {
 
         {activeTab === 'sound' ? (
           <div className="ros-settings-group" role="tabpanel">
-            <h2>Sonido</h2>
+            <h2>Sound</h2>
             <div className="ros-sound-panel">
               <button
                 className="ros-toggle-row"
@@ -120,14 +120,14 @@ export function SettingsApp() {
               >
                 <span className="ros-toggle-switch" aria-hidden="true" />
                 <span>
-                  <strong>Sonidos retro</strong>
-                  <small>{isSoundEnabled ? 'Activados' : 'Desactivados'}</small>
+                  <strong>Sounds retro</strong>
+                  <small>{isSoundEnabled ? 'Enabled' : 'Disabled'}</small>
                 </span>
               </button>
 
               <label className="ros-sound-control">
                 <span>
-                  <strong>Volumen</strong>
+                  <strong>Volume</strong>
                   <small>{volumePercent}%</small>
                 </span>
                 <input
@@ -145,10 +145,10 @@ export function SettingsApp() {
 
               <div className="ros-sound-control">
                 <span>
-                  <strong>Pack de sonido</strong>
+                  <strong>Sound pack</strong>
                   <small>{soundPackLabels[soundPack] ?? soundPack}</small>
                 </span>
-                <div className="ros-sound-pack-list" role="group" aria-label="Pack de sonido">
+                <div className="ros-sound-pack-list" role="group" aria-label="Sound pack">
                   {soundPackNames.map((packName) => (
                     <button
                       key={packName}
@@ -163,7 +163,7 @@ export function SettingsApp() {
                 </div>
               </div>
 
-              <div className="ros-sound-test-row" role="group" aria-label="Probar sonidos">
+              <div className="ros-sound-test-row" role="group" aria-label="Test sounds">
                 {testSounds.map((sound) => (
                   <button
                     key={sound.id}
@@ -182,30 +182,30 @@ export function SettingsApp() {
 
         {activeTab === 'system' ? (
           <div className="ros-settings-group" role="tabpanel">
-            <h2>Sistema</h2>
+            <h2>System</h2>
             <dl className="ros-system-info">
               <div>
-                <dt>Nombre</dt>
+                <dt>Name</dt>
                 <dd>Roso OS</dd>
               </div>
               <div>
-                <dt>Etapa</dt>
-                <dd>28 - Sistema de sonidos</dd>
+                <dt>Stage</dt>
+                <dd>28 - Sound System</dd>
               </div>
               <div>
-                <dt>Memoria simulada</dt>
+                <dt>Simulated memory</dt>
                 <dd>256 MB</dd>
               </div>
               <div>
-                <dt>Apps registradas</dt>
+                <dt>Registered apps</dt>
                 <dd>{appRegistry.length}</dd>
               </div>
               <div>
-                <dt>Ventanas abiertas</dt>
+                <dt>Open windows</dt>
                 <dd>{windows.length}</dd>
               </div>
               <div>
-                <dt>Ventanas visibles</dt>
+                <dt>Visible windows</dt>
                 <dd>{visibleWindows.length}</dd>
               </div>
             </dl>

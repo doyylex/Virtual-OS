@@ -17,7 +17,7 @@ export function PromptDialog({ dialog, onResolve }) {
     const nextValue = value.trim();
 
     if (!dialog.allowEmpty && !nextValue) {
-      setError('Ingresa un valor.');
+      setError('Enter a value.');
       return;
     }
 

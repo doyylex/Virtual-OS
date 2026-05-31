@@ -12,7 +12,7 @@ const sortFolders = (folders) =>
     const firstPath = firstFolder.path.map((node) => node.name).join('\\');
     const secondPath = secondFolder.path.map((node) => node.name).join('\\');
 
-    return firstPath.localeCompare(secondPath, 'es');
+    return firstPath.localeCompare(secondPath, 'en');
   });
 
 export function SaveFileDialog({ dialog, onResolve }) {
@@ -56,12 +56,12 @@ export function SaveFileDialog({ dialog, onResolve }) {
     const nextName = stripLockedExtension(fileName, lockedExtension);
 
     if (!nextName) {
-      setError('Ingresa un nombre para el archivo.');
+      setError('Enter a file name.');
       return;
     }
 
     if (!selectedFolder || isSelectedFolderBlocked) {
-      setError('Selecciona una carpeta valida.');
+      setError('Select a valid folder.');
       return;
     }
 
@@ -94,7 +94,7 @@ export function SaveFileDialog({ dialog, onResolve }) {
       {dialog.detail ? <small>{dialog.detail}</small> : null}
 
       <label className="ros-system-dialog-field">
-        <span>Nombre</span>
+        <span>Name</span>
         <span className="ros-extension-field">
           <input
             value={fileName}
@@ -118,8 +118,8 @@ export function SaveFileDialog({ dialog, onResolve }) {
       </label>
 
       <div className="ros-save-file-picker">
-        <span>Guardar en</span>
-        <div className="ros-save-file-tree" role="tree" aria-label="Carpetas disponibles">
+        <span>Save in</span>
+        <div className="ros-save-file-tree" role="tree" aria-label="Available folders">
           {folders.map((folder) => (
             <button
               className="ros-save-file-folder"
@@ -138,7 +138,7 @@ export function SaveFileDialog({ dialog, onResolve }) {
             </button>
           ))}
         </div>
-        <small>{selectedPath || 'Selecciona una carpeta.'}</small>
+        <small>{selectedPath || 'Select a folder.'}</small>
       </div>
 
       {error ? <em>{error}</em> : null}

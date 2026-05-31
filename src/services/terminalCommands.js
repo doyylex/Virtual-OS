@@ -11,36 +11,28 @@ const systemVersion = 'Roso OS 0.18.4';
 const appAliases = {
   computer: 'computer',
   pc: 'computer',
-  'mi-pc': 'computer',
-  mipc: 'computer',
   notepad: 'notepad',
-  bloc: 'notepad',
   terminal: 'terminal',
   cmd: 'terminal',
   explorer: 'explorer',
-  explorador: 'explorer',
   settings: 'settings',
   control: 'settings',
   panel: 'settings',
-  'panel-de-control': 'settings',
 };
 
-const wallpapers = ['bliss', 'azul', 'plata'];
+const wallpapers = ['bliss', 'blue', 'silver'];
 
 const folderAliases = {
   '.': null,
   c: rootId,
   'c:': rootId,
   root: rootId,
-  raiz: rootId,
   roso: rootId,
   desktop: 'desktop-folder',
-  escritorio: 'desktop-folder',
   documents: 'documents',
-  documentos: 'documents',
   docs: 'documents',
-  papelera: 'recycle-bin-folder',
   trash: 'recycle-bin-folder',
+  recycle: 'recycle-bin-folder',
 };
 
 const stripOuterQuotes = (value) => {
@@ -183,7 +175,7 @@ const resolvePath = (rawPath, context) => {
   const remainingSegments = firstAliasId ? segments.slice(1) : segments;
 
   if (!currentNode) {
-    return { error: 'Ruta no encontrada.' };
+    return { error: 'Path not found.' };
   }
 
   for (const segment of remainingSegments) {
@@ -199,13 +191,13 @@ const resolvePath = (rawPath, context) => {
     }
 
     if (currentNode.type !== 'folder') {
-      return { error: `"${currentNode.name}" no es una carpeta.` };
+      return { error: `"${currentNode.name}" is not a folder.` };
     }
 
     const childNode = findChildByName(nodes, currentNode.id, segment);
 
     if (!childNode) {
-      return { error: `No se encuentra la ruta especificada: ${segment}` };
+      return { error: `The specified path was not found: ${segment}` };
     }
 
     currentNode = childNode;
@@ -222,7 +214,7 @@ const resolveFolderPath = (rawPath, context) => {
   }
 
   if (result.node?.type !== 'folder') {
-    return { error: `"${result.node?.name ?? rawPath}" no es una carpeta.` };
+    return { error: `"${result.node?.name ?? rawPath}" is not a folder.` };
   }
 
   return result;
@@ -246,13 +238,13 @@ const listDirectory = (folder, context) => {
         return firstNode.type === 'folder' ? -1 : 1;
       }
 
-      return firstNode.name.localeCompare(secondNode.name, 'es');
+      return firstNode.name.localeCompare(secondNode.name, 'en');
     });
 
   return [
-    `Directorio de ${getTerminalPath(context.nodes, folder.id)}`,
+    `Directory of ${getTerminalPath(context.nodes, folder.id)}`,
     '',
-    ...(children.length > 0 ? children.map(formatDirectoryLine) : ['No hay archivos.']),
+    ...(children.length > 0 ? children.map(formatDirectoryLine) : ['No files.']),
   ];
 };
 
@@ -316,57 +308,57 @@ const parseSourceAndTarget = (rawArgs) => {
 };
 
 const commandHelp = {
-  help: ['help [comando]', 'Muestra la ayuda general o el detalle de un comando.'],
-  clear: ['clear', 'Limpia la salida de la terminal. Alias: cls.'],
-  cls: ['cls', 'Alias de clear.'],
-  exit: ['exit', 'Cierra la ventana actual de Terminal.'],
-  ver: ['ver', 'Muestra la version de Roso OS Terminal.'],
-  systeminfo: ['systeminfo', 'Muestra informacion simulada del sistema.'],
-  date: ['date', 'Muestra fecha y hora actual.'],
-  echo: ['echo <texto>', 'Repite el texto escrito.'],
-  whoami: ['whoami', 'Muestra el usuario actual.'],
-  pwd: ['pwd', 'Muestra la carpeta actual.'],
-  cd: ['cd [ruta]', 'Cambia de carpeta. Soporta ., .., desktop, documents y C:\\Roso.'],
-  dir: ['dir [ruta]', 'Lista archivos y carpetas de la ruta indicada o de la carpeta actual.'],
-  cat: ['cat <archivo>', 'Muestra el contenido de un archivo de texto.'],
-  type: ['type <archivo>', 'Alias de cat.'],
-  mkdir: ['mkdir [ruta] <nombre>', 'Crea una carpeta en la ruta indicada o en la carpeta actual.'],
-  touch: ['touch [ruta] <nombre>', 'Crea un archivo .txt en la ruta indicada o en la carpeta actual.'],
-  rm: ['rm <ruta>', 'Mueve un archivo o carpeta a la Papelera. Alias: del.'],
-  del: ['del <ruta>', 'Alias de rm.'],
-  copy: ['copy <origen> <carpeta-destino>', 'Copia un archivo o carpeta a otra carpeta.'],
-  move: ['move <origen> <carpeta-destino>', 'Mueve un archivo o carpeta a otra carpeta.'],
-  open: ['open <app|ruta>', 'Abre apps, carpetas en Explorador o archivos .txt en Bloc de notas.'],
-  theme: ['theme <bliss|azul|plata>', 'Cambia el wallpaper del escritorio.'],
+  help: ['help [command]', 'Shows general help or details for a command.'],
+  clear: ['clear', 'Clears terminal output. Alias: cls.'],
+  cls: ['cls', 'Alias for clear.'],
+  exit: ['exit', 'Closes the current Terminal window.'],
+  ver: ['ver', 'Shows the Roso OS Terminal version.'],
+  systeminfo: ['systeminfo', 'Shows simulated system information.'],
+  date: ['date', 'Shows the current date and time.'],
+  echo: ['echo <text>', 'Repeats the written text.'],
+  whoami: ['whoami', 'Shows the current user.'],
+  pwd: ['pwd', 'Shows the current folder.'],
+  cd: ['cd [path]', 'Changes folder. Supports ., .., desktop, documents, and C:\\Roso.'],
+  dir: ['dir [path]', 'Lists files and folders in the given path or current folder.'],
+  cat: ['cat <file>', 'Shows the contents of a text file.'],
+  type: ['type <file>', 'Alias for cat.'],
+  mkdir: ['mkdir [path] <name>', 'Creates a folder in the given path or current folder.'],
+  touch: ['touch [path] <name>', 'Creates a .txt file in the given path or current folder.'],
+  rm: ['rm <path>', 'Moves a file or folder to the Recycle Bin. Alias: del.'],
+  del: ['del <path>', 'Alias for rm.'],
+  copy: ['copy <source> <target-folder>', 'Copies a file or folder to another folder.'],
+  move: ['move <source> <target-folder>', 'Moves a file or folder to another folder.'],
+  open: ['open <app|path>', 'Opens apps, folders in File Explorer, or .txt files in Notepad.'],
+  theme: ['theme <bliss|blue|silver>', 'Changes the desktop wallpaper.'],
 };
 
 const commandNames = Object.keys(commandHelp);
 
 const helpLines = [
-  'Comandos disponibles:',
-  '  help [comando]               Muestra esta ayuda o una ayuda especifica',
-  '  clear                        Limpia la terminal',
-  '  cls                          Alias de clear',
-  '  exit                         Cierra la Terminal',
-  '  ver                          Muestra version del sistema',
-  '  systeminfo                   Muestra informacion del sistema',
-  '  date                         Muestra fecha y hora',
-  '  echo <texto>                 Repite texto',
-  '  whoami                       Muestra usuario actual',
-  '  pwd                          Muestra la carpeta actual',
-  '  cd [ruta]                    Cambia de carpeta',
-  '  dir [ruta]                   Lista una carpeta',
-  '  cat <archivo>                Muestra un archivo de texto',
-  '  type <archivo>               Alias de cat',
-  '  mkdir [ruta] <nombre>        Crea una carpeta',
-  '  touch [ruta] <nombre>        Crea un archivo',
-  '  rm <ruta>                    Mueve archivo/carpeta a Papelera',
-  '  copy <origen> <carpeta>      Copia a otra carpeta',
-  '  move <origen> <carpeta>      Mueve a otra carpeta',
-  '  open <app|ruta>              Abre apps, carpetas o archivos .txt',
-  '  theme <wallpaper>            Cambia entre bliss, azul o plata',
+  'Available commands:',
+  '  help [command]               Shows this help or command-specific help',
+  '  clear                        Clears the terminal',
+  '  cls                          Alias for clear',
+  '  exit                         Closes Terminal',
+  '  ver                          Shows system version',
+  '  systeminfo                   Shows system information',
+  '  date                         Shows date and time',
+  '  echo <text>                  Repeats text',
+  '  whoami                       Shows current user',
+  '  pwd                          Shows the current folder',
+  '  cd [path]                    Changes folder',
+  '  dir [path]                   Lists a folder',
+  '  cat <file>                  Shows a text file',
+  '  type <file>                 Alias for cat',
+  '  mkdir [path] <name>          Creates a folder',
+  '  touch [path] <name>          Creates a file',
+  '  rm <path>                    Moves file/folder to Recycle Bin',
+  '  copy <source> <folder>      Copies to another folder',
+  '  move <source> <folder>      Moves to another folder',
+  '  open <app|path>              Opens apps, folders, or .txt files',
+  '  theme <wallpaper>            Switches between bliss, blue, or silver',
   '',
-  'Rutas utiles: .  ..  desktop  documents  C:\\Roso',
+  'Useful paths: .  ..  desktop  documents  C:\\Roso',
 ];
 
 const getSpecificHelpLines = (commandName) => {
@@ -374,7 +366,7 @@ const getSpecificHelpLines = (commandName) => {
   const detail = commandHelp[normalizedCommandName];
 
   if (!detail) {
-    return [`No hay ayuda para "${commandName}".`, 'Usa help para ver comandos disponibles.'];
+    return [`No help for "${commandName}".`, 'Use help to see available commands.'];
   }
 
   return [detail[0], `  ${detail[1]}`];
@@ -387,17 +379,17 @@ const getSystemInfoLines = (context) => {
   const trashItems = nodes.filter((node) => node.parentId === recycleBinFolderId);
 
   return [
-    `Nombre del sistema:        ${systemVersion}`,
-    `Version de terminal:       ${terminalVersion}`,
-    'Usuario registrado:        Roso',
-    'Tipo de sistema:           Simulacion web en navegador',
-    'Etapa del proyecto:        18.4 Terminal pulida',
-    `Directorio actual:         ${getTerminalPath(nodes, context.currentFolderId)}`,
-    `Carpetas indexadas:        ${folders.length}`,
-    `Archivos indexados:        ${files.length}`,
-    `Elementos en Papelera:     ${trashItems.length}`,
-    `Ventanas abiertas:         ${context.windowCount ?? 0}`,
-    `Sonidos del sistema:       ${context.soundsEnabled ? 'Activados' : 'Desactivados'}`,
+    `System name:             ${systemVersion}`,
+    `Terminal version:        ${terminalVersion}`,
+    'Registered user:         Roso',
+    'System type:             Web simulation in browser',
+    'Project stage:           18.4 Polished Terminal',
+    `Current directory:       ${getTerminalPath(nodes, context.currentFolderId)}`,
+    `Indexed folders:         ${folders.length}`,
+    `Indexed files:           ${files.length}`,
+    `Items in Recycle Bin:    ${trashItems.length}`,
+    `Open windows:            ${context.windowCount ?? 0}`,
+    `System sounds:           ${context.soundsEnabled ? 'Enabled' : 'Disabled'}`,
   ];
 };
 
@@ -474,7 +466,7 @@ const getPathCompletion = (command, rawArgs, context) => {
     .filter((node) => node.parentId === parentResult.node.id)
     .filter((node) => !foldersOnly || node.type === 'folder')
     .filter((node) => node.name.toLowerCase().startsWith(parts.namePrefix.toLowerCase()))
-    .sort((firstNode, secondNode) => firstNode.name.localeCompare(secondNode.name, 'es'));
+    .sort((firstNode, secondNode) => firstNode.name.localeCompare(secondNode.name, 'en'));
 
   if (candidates.length === 0) {
     return null;
@@ -482,7 +474,7 @@ const getPathCompletion = (command, rawArgs, context) => {
 
   if (candidates.length > 1) {
     return {
-      lines: ['Sugerencias:', ...candidates.map((node) => `  ${node.type === 'folder' ? '<DIR>' : '     '} ${node.name}`)],
+      lines: ['Suggestions:', ...candidates.map((node) => `  ${node.type === 'folder' ? '<DIR>' : '     '} ${node.name}`)],
     };
   }
 
@@ -508,7 +500,7 @@ export const getTerminalCompletion = (input, context) => {
     }
 
     if (matches.length > 1) {
-      return { lines: ['Comandos:', `  ${matches.join('  ')}`] };
+      return { lines: ['Commands:', `  ${matches.join('  ')}`] };
     }
 
     return null;
@@ -575,7 +567,7 @@ export function runTerminalCommand(input, context) {
     case 'date':
       return {
         type: 'output',
-        lines: [new Intl.DateTimeFormat('es-AR', { dateStyle: 'full', timeStyle: 'medium' }).format(new Date())],
+        lines: [new Intl.DateTimeFormat('en-US', { dateStyle: 'full', timeStyle: 'medium' }).format(new Date())],
       };
     case 'echo':
       return { type: 'output', lines: [rawArgs] };
@@ -608,7 +600,7 @@ export function runTerminalCommand(input, context) {
 
         return {
           type: 'output',
-          lines: [`Directorio de ${getTerminalPath(context.nodes, parent?.id)}`, '', formatDirectoryLine(result.node)],
+          lines: [`Directory of ${getTerminalPath(context.nodes, parent?.id)}`, '', formatDirectoryLine(result.node)],
         };
       }
 
@@ -617,7 +609,7 @@ export function runTerminalCommand(input, context) {
     case 'cat':
     case 'type': {
       if (!rawArgs) {
-        return { type: 'output', lines: [`Uso: ${normalizedCommand} <archivo>`] };
+        return { type: 'output', lines: [`Usage: ${normalizedCommand} <file>`] };
       }
 
       const result = resolvePath(rawArgs, context);
@@ -627,14 +619,14 @@ export function runTerminalCommand(input, context) {
       }
 
       if (result.node.type !== 'file') {
-        return { type: 'output', lines: [`"${result.node.name}" es una carpeta.`] };
+        return { type: 'output', lines: [`"${result.node.name}" is a folder.`] };
       }
 
       if (!isTextFileName(result.node.name)) {
-        return { type: 'output', lines: [`"${result.node.name}" no es un archivo de texto.`] };
+        return { type: 'output', lines: [`"${result.node.name}" is not a text file.`] };
       }
 
-      return { type: 'output', lines: (result.node.content || 'Archivo vacio.').split('\n') };
+      return { type: 'output', lines: (result.node.content || 'Empty file.').split('\n') };
     }
     case 'mkdir': {
       const target = resolveFolderAndName(rawArgs, context);
@@ -644,11 +636,11 @@ export function runTerminalCommand(input, context) {
       }
 
       if (!target.name) {
-        return { type: 'output', lines: ['Uso: mkdir [ruta] <nombre>'] };
+        return { type: 'output', lines: ['Usage: mkdir [path] <name>'] };
       }
 
       const createdNode = context.createFolder?.(target.name, target.folderId);
-      return { type: 'output', lines: [`Carpeta creada: ${createdNode?.name ?? target.name}`] };
+      return { type: 'output', lines: [`Folder created: ${createdNode?.name ?? target.name}`] };
     }
     case 'touch': {
       const target = resolveFolderAndName(rawArgs, context);
@@ -658,17 +650,17 @@ export function runTerminalCommand(input, context) {
       }
 
       if (!target.name) {
-        return { type: 'output', lines: ['Uso: touch [ruta] <nombre>'] };
+        return { type: 'output', lines: ['Usage: touch [path] <name>'] };
       }
 
       const fileName = getTerminalTextFileName(target.name);
       const createdNode = context.createFile?.(fileName, target.folderId);
-      return { type: 'output', lines: [`Archivo creado: ${createdNode?.name ?? fileName}`] };
+      return { type: 'output', lines: [`File created: ${createdNode?.name ?? fileName}`] };
     }
     case 'rm':
     case 'del': {
       if (!rawArgs) {
-        return { type: 'output', lines: [`Uso: ${normalizedCommand} <ruta>`] };
+        return { type: 'output', lines: [`Usage: ${normalizedCommand} <path>`] };
       }
 
       const result = resolvePath(rawArgs, context);
@@ -678,22 +670,22 @@ export function runTerminalCommand(input, context) {
       }
 
       if (!canOperateOnNode(result.node, context)) {
-        return { type: 'output', lines: [`No se puede eliminar "${result.node.name}".`] };
+        return { type: 'output', lines: [`Cannot delete "${result.node.name}".`] };
       }
 
       const movedNode = context.moveNodeToTrash?.(result.node.id);
 
       if (!movedNode) {
-        return { type: 'output', lines: [`No se pudo mover "${result.node.name}" a la Papelera.`] };
+        return { type: 'output', lines: [`Could not move "${result.node.name}" to the Recycle Bin.`] };
       }
 
-      return { type: 'output', lines: [`Movido a Papelera: ${movedNode.name}`] };
+      return { type: 'output', lines: [`Moved to Recycle Bin: ${movedNode.name}`] };
     }
     case 'copy': {
       const parsedArgs = parseSourceAndTarget(rawArgs);
 
       if (parsedArgs.error) {
-        return { type: 'output', lines: ['Uso: copy <origen> <carpeta-destino>'] };
+        return { type: 'output', lines: ['Usage: copy <source> <target-folder>'] };
       }
 
       const sourceResult = resolvePath(parsedArgs.sourcePath, context);
@@ -708,22 +700,22 @@ export function runTerminalCommand(input, context) {
       }
 
       if (!canOperateOnNode(sourceResult.node, context)) {
-        return { type: 'output', lines: [`No se puede copiar "${sourceResult.node.name}".`] };
+        return { type: 'output', lines: [`Cannot copy "${sourceResult.node.name}".`] };
       }
 
       const copiedNode = context.copyNodeToFolder?.(sourceResult.node.id, targetResult.node.id);
 
       if (!copiedNode) {
-        return { type: 'output', lines: [`No se pudo copiar "${sourceResult.node.name}".`] };
+        return { type: 'output', lines: [`Could not copy "${sourceResult.node.name}".`] };
       }
 
-      return { type: 'output', lines: [`Copiado en ${getTerminalPath(context.nodes, targetResult.node.id)}: ${copiedNode.name}`] };
+      return { type: 'output', lines: [`Copied to ${getTerminalPath(context.nodes, targetResult.node.id)}: ${copiedNode.name}`] };
     }
     case 'move': {
       const parsedArgs = parseSourceAndTarget(rawArgs);
 
       if (parsedArgs.error) {
-        return { type: 'output', lines: ['Uso: move <origen> <carpeta-destino>'] };
+        return { type: 'output', lines: ['Usage: move <source> <target-folder>'] };
       }
 
       const sourceResult = resolvePath(parsedArgs.sourcePath, context);
@@ -738,7 +730,7 @@ export function runTerminalCommand(input, context) {
       }
 
       if (!canOperateOnNode(sourceResult.node, context)) {
-        return { type: 'output', lines: [`No se puede mover "${sourceResult.node.name}".`] };
+        return { type: 'output', lines: [`Cannot move "${sourceResult.node.name}".`] };
       }
 
       if (
@@ -746,31 +738,31 @@ export function runTerminalCommand(input, context) {
         (sourceResult.node.id === targetResult.node.id ||
           getDescendantIds(context.nodes ?? [], sourceResult.node.id).includes(targetResult.node.id))
       ) {
-        return { type: 'output', lines: ['No se puede mover una carpeta dentro de si misma.'] };
+        return { type: 'output', lines: ['Cannot move a folder inside itself.'] };
       }
 
       if (sourceResult.node.parentId === targetResult.node.id) {
-        return { type: 'output', lines: [`"${sourceResult.node.name}" ya esta en esa carpeta.`] };
+        return { type: 'output', lines: [`"${sourceResult.node.name}" is already in that folder.`] };
       }
 
       const movedNode = context.moveNodeToFolder?.(sourceResult.node.id, targetResult.node.id);
 
       if (!movedNode) {
-        return { type: 'output', lines: [`No se pudo mover "${sourceResult.node.name}".`] };
+        return { type: 'output', lines: [`Could not move "${sourceResult.node.name}".`] };
       }
 
-      return { type: 'output', lines: [`Movido a ${getTerminalPath(context.nodes, targetResult.node.id)}: ${movedNode.name}`] };
+      return { type: 'output', lines: [`Moved to ${getTerminalPath(context.nodes, targetResult.node.id)}: ${movedNode.name}`] };
     }
     case 'open': {
       const target = appAliases[args.join('-').toLowerCase()] ?? appAliases[args[0]?.toLowerCase()];
 
       if (target) {
         context.openApp(target);
-        return { type: 'output', lines: [`Abriendo ${target}...`] };
+        return { type: 'output', lines: [`Opening ${target}...`] };
       }
 
       if (!rawArgs) {
-        return { type: 'output', lines: ['Uso: open <app|ruta>'] };
+        return { type: 'output', lines: ['Usage: open <app|path>'] };
       }
 
       const result = resolvePath(rawArgs, context);
@@ -781,35 +773,35 @@ export function runTerminalCommand(input, context) {
 
       if (result.node.type === 'folder') {
         context.openApp('explorer', { folderId: result.node.id });
-        return { type: 'output', lines: [`Abriendo carpeta: ${result.node.name}`] };
+        return { type: 'output', lines: [`Opening folder: ${result.node.name}`] };
       }
 
       if (isTextFileName(result.node.name)) {
         context.openApp('notepad', { fileId: result.node.id });
-        return { type: 'output', lines: [`Abriendo archivo: ${result.node.name}`] };
+        return { type: 'output', lines: [`Opening file: ${result.node.name}`] };
       }
 
       if (isImageFileName(result.node.name)) {
         context.openApp('image-viewer', { fileId: result.node.id });
-        return { type: 'output', lines: [`Abriendo imagen: ${result.node.name}`] };
+        return { type: 'output', lines: [`Opening image: ${result.node.name}`] };
       }
 
-      return { type: 'output', lines: [`No hay una app asociada para "${result.node.name}".`] };
+      return { type: 'output', lines: [`There is no associated app for "${result.node.name}".`] };
     }
     case 'theme': {
       const wallpaper = args[0]?.toLowerCase();
 
       if (!wallpapers.includes(wallpaper)) {
-        return { type: 'output', lines: ['Uso: theme bliss|azul|plata'] };
+        return { type: 'output', lines: ['Usage: theme bliss|blue|silver'] };
       }
 
       context.setWallpaper(wallpaper);
-      return { type: 'output', lines: [`Wallpaper cambiado a ${wallpaper}.`] };
+      return { type: 'output', lines: [`Wallpaper changed to ${wallpaper}.`] };
     }
     default:
       return {
         type: 'output',
-        lines: [`'${command}' no se reconoce como un comando interno de Roso OS.`],
+        lines: [`'${command}' is not recognized as an internal Roso OS command.`],
       };
   }
 }

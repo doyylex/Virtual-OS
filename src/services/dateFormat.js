@@ -1,4 +1,4 @@
-const shortDateTimeFormatter = new Intl.DateTimeFormat('es-AR', {
+const shortDateTimeFormatter = new Intl.DateTimeFormat('en-US', {
   day: '2-digit',
   month: '2-digit',
   year: 'numeric',
@@ -6,7 +6,7 @@ const shortDateTimeFormatter = new Intl.DateTimeFormat('es-AR', {
   minute: '2-digit',
 });
 
-export const formatShortDateTime = (timestamp, fallback = 'Fecha no disponible') => {
+export const formatShortDateTime = (timestamp, fallback = 'Date unavailable') => {
   const time = Number(timestamp);
 
   if (!Number.isFinite(time) || time <= 0) {

@@ -1,6 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { getDesktopApps } from '../apps/appRegistry.js';
-import { findNextDesktopPosition, getDesktopGridPosition, snapDesktopPosition } from '../services/desktopLayout.js';
+import {
+  findNextDesktopPosition,
+  getDesktopBounds,
+  getDesktopGridPosition,
+  getResponsiveIconPositions,
+  snapDesktopPosition,
+} from '../services/desktopLayout.js';
 import { dispatchPaintFileDrop, getFileDropTargetFromPoint } from '../services/fileDropTargets.js';
 import { getNodeIconTone, isImageFileName, isTextFileName } from '../services/fileIcons.js';
 import { getEditableNodeName } from '../services/fileNames.js';
@@ -19,6 +25,7 @@ const CONTEXT_MENU_ITEM_HEIGHT = 28;
 const TASKBAR_HEIGHT = 40;
 const DESKTOP_ICON_WIDTH = 78;
 const DESKTOP_ICON_HEIGHT = 74;
+const DESKTOP_REFRESH_EFFECT_DURATION = 620;
 const SELECTION_DRAG_THRESHOLD = 4;
 const desktopFolderId = 'desktop-folder';
 const recycleBinFolderId = 'recycle-bin-folder';
@@ -65,9 +72,8 @@ const desktopAppIcons = getDesktopApps().map((app) => ({
 }));
 
 const staticDesktopIcons = [
-  { id: 'static:documents', label: 'Mis documentos', tone: 'folder', folderId: 'documents', kind: 'folder-shortcut' },
-  { id: 'static:portfolio', label: 'Portfolio', tone: 'screen', kind: 'static' },
-  { id: 'static:recycle-bin', label: 'Papelera', tone: 'trash', folderId: 'recycle-bin-folder', kind: 'recycle-bin' },
+  { id: 'static:documents', label: 'My Documents', tone: 'folder', folderId: 'documents', kind: 'folder-shortcut' },
+  { id: 'static:recycle-bin', label: 'Recycle Bin', tone: 'trash', folderId: 'recycle-bin-folder', kind: 'recycle-bin' },
 ];
 
 const sortDesktopNodes = (nodes) =>
@@ -76,7 +82,7 @@ const sortDesktopNodes = (nodes) =>
       return a.type === 'folder' ? -1 : 1;
     }
 
-    return a.name.localeCompare(b.name, 'es');
+    return a.name.localeCompare(b.name, 'en');
   });
 
 const getMenuPosition = (event, itemCount) => ({
@@ -100,10 +106,10 @@ const getSelectionBoxRect = (selectionBox) => {
   };
 };
 
-const getIconBounds = (position) => ({
-  left: position.x,
+const getIconBounds = (position, scrollLeft = 0) => ({
+  left: position.x - scrollLeft,
   top: position.y,
-  right: position.x + DESKTOP_ICON_WIDTH,
+  right: position.x - scrollLeft + DESKTOP_ICON_WIDTH,
   bottom: position.y + DESKTOP_ICON_HEIGHT,
 });
 
@@ -120,10 +126,13 @@ const getDesktopPoint = (event, desktopRect) => ({
 
 export function Desktop() {
   const [contextMenu, setContextMenu] = useState(null);
+  const [desktopBounds, setDesktopBounds] = useState(() => getDesktopBounds());
   const [draftName, setDraftName] = useState('');
   const [dragPreview, setDragPreview] = useState(null);
   const [draggingIconIds, setDraggingIconIds] = useState([]);
+  const [desktopScrollLeft, setDesktopScrollLeft] = useState(0);
   const [editingIconId, setEditingIconId] = useState(null);
+  const [refreshEffectKey, setRefreshEffectKey] = useState(0);
   const [selectedIconIds, setSelectedIconIds] = useState([]);
   const [selectionBox, setSelectionBox] = useState(null);
   const didIconDragRef = useRef(false);
@@ -167,8 +176,8 @@ export function Desktop() {
               ...icon,
               description:
                 recycleBinItemsCount === 0
-                  ? 'Papelera vacia'
-                  : `${recycleBinItemsCount} elemento${recycleBinItemsCount === 1 ? '' : 's'} eliminado${recycleBinItemsCount === 1 ? '' : 's'}`,
+                  ? 'Recycle Bin is empty'
+                  : `${recycleBinItemsCount} deleted item${recycleBinItemsCount === 1 ? '' : 's'}`,
               tone: recycleBinItemsCount === 0 ? 'trash' : 'trash-full',
             }
           : icon,
@@ -191,6 +200,19 @@ export function Desktop() {
     () => [...desktopAppIcons, ...desktopFileIcons, ...staticIcons],
     [desktopFileIcons, staticIcons],
   );
+  const desktopIconIds = useMemo(() => desktopIcons.map((icon) => icon.id), [desktopIcons]);
+  const responsiveIconPositions = useMemo(
+    () => getResponsiveIconPositions(desktopIconIds, iconPositions, desktopBounds),
+    [desktopBounds, desktopIconIds, iconPositions],
+  );
+  const desktopIconLayerWidth = useMemo(() => {
+    const iconRightEdge = Math.max(
+      0,
+      ...Object.values(responsiveIconPositions).map((position) => position.x + DESKTOP_ICON_WIDTH + 18),
+    );
+
+    return Math.max(desktopBounds.width, iconRightEdge);
+  }, [desktopBounds.width, responsiveIconPositions]);
   const selectedIconIdSet = useMemo(() => new Set(selectedIconIds), [selectedIconIds]);
   const selectedIcons = useMemo(
     () => desktopIcons.filter((icon) => selectedIconIdSet.has(icon.id)),
@@ -218,22 +240,62 @@ export function Desktop() {
       return;
     }
 
-    ensureIconPositions(desktopIcons.map((icon) => icon.id));
-  }, [desktopIcons, ensureIconPositions, iconPositions, isDesktopLayoutReady]);
+    ensureIconPositions(desktopIconIds);
+  }, [desktopIconIds, ensureIconPositions, iconPositions, isDesktopLayoutReady]);
+
+  useEffect(() => {
+    let frameId = 0;
+
+    const handleResize = () => {
+      window.cancelAnimationFrame(frameId);
+      frameId = window.requestAnimationFrame(() => {
+        setDesktopBounds(getDesktopBounds());
+      });
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      window.cancelAnimationFrame(frameId);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (refreshEffectKey === 0) {
+      return undefined;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setRefreshEffectKey(0);
+    }, DESKTOP_REFRESH_EFFECT_DURATION);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [refreshEffectKey]);
 
   const getDisplayedIconPosition = useCallback((iconId, index) => {
     if (dragPreview?.positions?.[iconId]) {
       return dragPreview.positions[iconId];
     }
 
-    return iconPositions[iconId] ?? getDesktopGridPosition(index);
-  }, [dragPreview, iconPositions]);
+    return responsiveIconPositions[iconId] ?? iconPositions[iconId] ?? getDesktopGridPosition(index, desktopBounds);
+  }, [desktopBounds, dragPreview, iconPositions, responsiveIconPositions]);
 
   const getDisplayedIconPositions = useCallback(() =>
     desktopIcons.reduce((positions, icon, index) => {
       positions[icon.id] = getDisplayedIconPosition(icon.id, index);
       return positions;
     }, {}), [desktopIcons, getDisplayedIconPosition]);
+
+  const getDesktopLayoutBounds = useCallback(() => ({
+    ...desktopBounds,
+    width: desktopIconLayerWidth,
+  }), [desktopBounds, desktopIconLayerWidth]);
+
+  const handleDesktopIconsScroll = useCallback((event) => {
+    setDesktopScrollLeft(event.currentTarget.scrollLeft);
+  }, []);
 
   const closeContextMenu = useCallback(() => setContextMenu(null), []);
 
@@ -274,38 +336,38 @@ export function Desktop() {
 
   const getDropFolderLabel = useCallback((folderId) => {
     if (folderId === desktopFolderId) {
-      return 'Escritorio';
+      return 'Desktop';
     }
 
     if (folderId === recycleBinFolderId) {
-      return 'Papelera';
+      return 'Recycle Bin';
     }
 
-    return nodes.find((node) => node.id === folderId)?.name ?? 'carpeta';
+    return nodes.find((node) => node.id === folderId)?.name ?? 'folder';
   }, [nodes]);
 
   const getDragDropFeedback = useCallback((dropTarget, isValidDropTarget, isFileDrag) => {
     if (!isFileDrag) {
-      return { state: 'neutral', label: 'Mover icono' };
+      return { state: 'neutral', label: 'Move icon' };
     }
 
     if (!dropTarget) {
-      return { state: 'neutral', label: 'Soltar para reubicar' };
+      return { state: 'neutral', label: 'Drop to reposition' };
     }
 
     if (!isValidDropTarget) {
-      return { state: 'invalid', label: 'No se puede soltar aqui' };
+      return { state: 'invalid', label: 'Cannot drop here' };
     }
 
     if (dropTarget.type === 'paint') {
-      return { state: 'valid', label: 'Editar en Paint' };
+      return { state: 'valid', label: 'Edit in Paint' };
     }
 
     if (dropTarget.folderId === recycleBinFolderId) {
-      return { state: 'valid', label: 'Enviar a Papelera' };
+      return { state: 'valid', label: 'Send to Recycle Bin' };
     }
 
-    return { state: 'valid', label: `Mover a ${getDropFolderLabel(dropTarget.folderId)}` };
+    return { state: 'valid', label: `Move to ${getDropFolderLabel(dropTarget.folderId)}` };
   }, [getDropFolderLabel]);
 
   const openDesktopIcon = (icon) => {
@@ -367,7 +429,7 @@ export function Desktop() {
     openApp('properties', {
       shortcut: {
         name: icon.label,
-        description: icon.description ?? 'Elemento del escritorio',
+        description: icon.description ?? 'Desktop item',
         kind: icon.kind,
       },
     });
@@ -409,7 +471,7 @@ export function Desktop() {
 
     const createdIconId = `fs:${nodeId}`;
     const existingIconPositions = getDisplayedIconPositions();
-    const nextPosition = findNextDesktopPosition(desktopIcons.map((icon) => icon.id), existingIconPositions);
+    const nextPosition = findNextDesktopPosition(desktopIconIds, existingIconPositions, desktopBounds);
     const createdNode = useFileSystemStore.getState().getNode(nodeId);
 
     setIconPosition(createdIconId, nextPosition);
@@ -431,11 +493,11 @@ export function Desktop() {
 
     const pastedIconId = `fs:${nodeId}`;
     const existingIconPositions = getDisplayedIconPositions();
-    const nextPosition = findNextDesktopPosition(desktopIcons.map((icon) => icon.id), existingIconPositions);
+    const nextPosition = findNextDesktopPosition(desktopIconIds, existingIconPositions, desktopBounds);
 
     setIconPosition(pastedIconId, nextPosition);
     selectSingleIcon(pastedIconId);
-  }, [desktopIcons, getDisplayedIconPositions, selectSingleIcon, setIconPosition]);
+  }, [desktopBounds, desktopIconIds, getDisplayedIconPositions, selectSingleIcon, setIconPosition]);
 
   const placePastedIcons = useCallback((nodeIds) => {
     const pastedNodeIds = Array.isArray(nodeIds) ? nodeIds : nodeIds ? [nodeIds] : [];
@@ -445,7 +507,7 @@ export function Desktop() {
     }
 
     let existingIconPositions = getDisplayedIconPositions();
-    const existingIconIds = desktopIcons.map((icon) => icon.id);
+    const existingIconIds = [...desktopIconIds];
     const pastedIconIds = [];
 
     pastedNodeIds.forEach((nodeId) => {
@@ -456,7 +518,7 @@ export function Desktop() {
       }
 
       const pastedIconId = `fs:${nodeId}`;
-      const nextPosition = findNextDesktopPosition(existingIconIds, existingIconPositions);
+      const nextPosition = findNextDesktopPosition(existingIconIds, existingIconPositions, desktopBounds);
       existingIconIds.push(pastedIconId);
       existingIconPositions = {
         ...existingIconPositions,
@@ -469,7 +531,7 @@ export function Desktop() {
     if (pastedIconIds.length > 0) {
       setSelectedIconIds(pastedIconIds);
     }
-  }, [desktopIcons, getDisplayedIconPositions, setIconPosition]);
+  }, [desktopBounds, desktopIconIds, getDisplayedIconPositions, setIconPosition]);
 
   const handleCreateFolder = () => {
     closeContextMenu();
@@ -562,7 +624,7 @@ export function Desktop() {
   }, [clearIconSelection, closeContextMenu, moveNodeToTrash, playSound]);
 
   const getElementCountLabel = (items) =>
-    `${items.length} elemento${items.length === 1 ? '' : 's'}`;
+    `${items.length} item${items.length === 1 ? '' : 's'}`;
 
   const confirmMoveNodesToTrash = useCallback(async (items) => {
     if (items.length === 0) {
@@ -570,13 +632,13 @@ export function Desktop() {
     }
 
     return showConfirm({
-      title: 'Mover a Papelera',
+      title: 'Move to Recycle Bin',
       message:
         items.length === 1
-          ? `Mover "${items[0].name}" a la Papelera?`
-          : `Mover ${getElementCountLabel(items)} a la Papelera?`,
-      detail: 'Podras restaurarlo desde la Papelera si lo necesitas.',
-      confirmLabel: 'Mover',
+          ? `Move "${items[0].name}" to the Recycle Bin?`
+          : `Move ${getElementCountLabel(items)} to the Recycle Bin?`,
+      detail: 'You can restore it from the Recycle Bin if needed.',
+      confirmLabel: 'Move',
       icon: 'warning',
     });
   }, [showConfirm]);
@@ -589,10 +651,10 @@ export function Desktop() {
     }
 
     const confirmed = await showConfirm({
-      title: 'Vaciar Papelera',
-      message: 'Eliminar permanentemente todos los elementos de la Papelera?',
-      detail: 'Todos los archivos de la Papelera se borraran de forma definitiva.',
-      confirmLabel: 'Vaciar',
+      title: 'Empty Recycle Bin',
+      message: 'Permanently delete all items in the Recycle Bin?',
+      detail: 'All files in the Recycle Bin will be permanently deleted.',
+      confirmLabel: 'Empty',
       icon: 'warning',
     });
 
@@ -610,10 +672,10 @@ export function Desktop() {
     }
 
     const confirmed = await showConfirm({
-      title: 'Restaurar todos',
-      message: `Restaurar ${recycleBinItemsCount} elemento${recycleBinItemsCount === 1 ? '' : 's'} de la Papelera?`,
-      detail: 'Los elementos volveran a su ubicacion original. Si ya no existe, se restauraran en el Escritorio.',
-      confirmLabel: 'Restaurar',
+      title: 'Restore All',
+      message: `Restore ${recycleBinItemsCount} item${recycleBinItemsCount === 1 ? '' : 's'} from the Recycle Bin?`,
+      detail: 'Items will return to their original location. If it no longer exists, they will be restored to the Desktop.',
+      confirmLabel: 'Restore',
       icon: 'question',
     });
 
@@ -627,7 +689,7 @@ export function Desktop() {
     closeContextMenu();
     resetIconPositions(
       [...desktopIcons]
-        .sort((firstIcon, secondIcon) => firstIcon.label.localeCompare(secondIcon.label, 'es'))
+        .sort((firstIcon, secondIcon) => firstIcon.label.localeCompare(secondIcon.label, 'en'))
         .map((icon) => icon.id),
     );
     playSound('click');
@@ -635,6 +697,7 @@ export function Desktop() {
 
   const handleRefresh = useCallback(() => {
     closeContextMenu();
+    setRefreshEffectKey((currentKey) => currentKey + 1);
     playSound('click');
   }, [closeContextMenu, playSound]);
 
@@ -644,82 +707,82 @@ export function Desktop() {
 
     return desktopIcons
       .filter((icon, index) => {
-        const iconPosition = iconPositionMap[icon.id] ?? getDesktopGridPosition(index);
-        return doRectsIntersect(selectionRect, getIconBounds(iconPosition));
+        const iconPosition = iconPositionMap[icon.id] ?? getDesktopGridPosition(index, desktopBounds);
+        return doRectsIntersect(selectionRect, getIconBounds(iconPosition, desktopScrollLeft));
       })
       .map((icon) => icon.id);
-  }, [desktopIcons, getDisplayedIconPositions]);
+  }, [desktopBounds, desktopIcons, desktopScrollLeft, getDisplayedIconPositions]);
 
   const getContextMenuItems = () => {
     const wrap = (callback) => () => callback();
 
     if (contextMenu?.type === 'desktop') {
       return [
-        { id: 'new-folder', label: 'Nueva carpeta', onSelect: wrap(handleCreateFolder) },
-        { id: 'new-text-file', label: 'Nuevo documento de texto', onSelect: wrap(handleCreateTextFile) },
+        { id: 'new-folder', label: 'New Folder', onSelect: wrap(handleCreateFolder) },
+        { id: 'new-text-file', label: 'New Text Document', onSelect: wrap(handleCreateTextFile) },
         { id: 'separator-create', type: 'separator' },
         {
           id: 'paste-desktop',
-          label: 'Pegar',
+          label: 'Paste',
           hint: 'Ctrl+V',
           disabled: !canPasteToDesktop,
           onSelect: wrap(() => handlePasteToFolder(desktopFolderId)),
         },
         { id: 'separator-clipboard', type: 'separator' },
-        { id: 'sort-name', label: 'Ordenar por nombre', onSelect: wrap(handleArrangeByName) },
-        { id: 'refresh', label: 'Actualizar', hint: 'F5', onSelect: wrap(handleRefresh) },
+        { id: 'sort-name', label: 'Arrange by Name', onSelect: wrap(handleArrangeByName) },
+        { id: 'refresh', label: 'Refresh', hint: 'F5', onSelect: wrap(handleRefresh) },
         { id: 'separator-properties', type: 'separator' },
-        { id: 'desktop-properties', label: 'Propiedades', onSelect: wrap(() => openProperties(null)) },
+        { id: 'desktop-properties', label: 'Properties', onSelect: wrap(() => openProperties(null)) },
       ];
     }
 
     if (contextTargetIcon?.kind === 'recycle-bin') {
       return [
-        { id: 'open-recycle', label: 'Abrir', onSelect: wrap(() => openDesktopIcon(contextTargetIcon)) },
+        { id: 'open-recycle', label: 'Open', onSelect: wrap(() => openDesktopIcon(contextTargetIcon)) },
         {
           id: 'restore-all-recycle',
-          label: 'Restaurar todos',
+          label: 'Restore All',
           disabled: recycleBinItemsCount === 0,
           onSelect: wrap(handleRestoreAllTrash),
         },
         {
           id: 'empty-recycle',
-          label: 'Vaciar Papelera',
+          label: 'Empty Recycle Bin',
           disabled: recycleBinItemsCount === 0,
           onSelect: wrap(handleEmptyTrash),
         },
         { id: 'separator-recycle', type: 'separator' },
-        { id: 'recycle-properties', label: 'Propiedades', onSelect: wrap(() => openProperties(contextTargetIcon)) },
+        { id: 'recycle-properties', label: 'Properties', onSelect: wrap(() => openProperties(contextTargetIcon)) },
       ];
     }
 
     if (contextTargetIcon?.node) {
       return [
-        { id: 'open-node', label: 'Abrir', onSelect: wrap(() => openDesktopIcon(contextTargetIcon)) },
+        { id: 'open-node', label: 'Open', onSelect: wrap(() => openDesktopIcon(contextTargetIcon)) },
         { id: 'separator-node-open', type: 'separator' },
-        { id: 'copy-node', label: 'Copiar', hint: 'Ctrl+C', onSelect: wrap(() => handleCopyIcon(contextTargetIcon)) },
-        { id: 'cut-node', label: 'Cortar', hint: 'Ctrl+X', onSelect: wrap(() => handleCutIcon(contextTargetIcon)) },
+        { id: 'copy-node', label: 'Copy', hint: 'Ctrl+C', onSelect: wrap(() => handleCopyIcon(contextTargetIcon)) },
+        { id: 'cut-node', label: 'Cut', hint: 'Ctrl+X', onSelect: wrap(() => handleCutIcon(contextTargetIcon)) },
         {
           id: 'paste-node-folder',
-          label: 'Pegar',
+          label: 'Paste',
           hint: 'Ctrl+V',
           disabled: contextTargetIcon.node.type !== 'folder' || !canPasteToDesktop,
           onSelect: wrap(() => handlePasteToFolder(contextTargetIcon.node.id)),
         },
-        { id: 'duplicate-node', label: 'Duplicar', onSelect: wrap(() => handleDuplicateIcon(contextTargetIcon)) },
+        { id: 'duplicate-node', label: 'Duplicate', onSelect: wrap(() => handleDuplicateIcon(contextTargetIcon)) },
         { id: 'separator-node-edit', type: 'separator' },
-        { id: 'rename-node', label: 'Renombrar', hint: 'F2', onSelect: wrap(() => beginRename(contextTargetIcon)) },
-        { id: 'delete-node', label: 'Eliminar', hint: 'Del', onSelect: wrap(() => handleMoveToTrash(contextTargetIcon)) },
+        { id: 'rename-node', label: 'Rename', hint: 'F2', onSelect: wrap(() => beginRename(contextTargetIcon)) },
+        { id: 'delete-node', label: 'Delete', hint: 'Del', onSelect: wrap(() => handleMoveToTrash(contextTargetIcon)) },
         { id: 'separator-node', type: 'separator' },
-        { id: 'node-properties', label: 'Propiedades', onSelect: wrap(() => openProperties(contextTargetIcon)) },
+        { id: 'node-properties', label: 'Properties', onSelect: wrap(() => openProperties(contextTargetIcon)) },
       ];
     }
 
     if (contextTargetIcon) {
       return [
-        { id: 'open-shortcut', label: 'Abrir', onSelect: wrap(() => openDesktopIcon(contextTargetIcon)) },
+        { id: 'open-shortcut', label: 'Open', onSelect: wrap(() => openDesktopIcon(contextTargetIcon)) },
         { id: 'separator-shortcut', type: 'separator' },
-        { id: 'shortcut-properties', label: 'Propiedades', onSelect: wrap(() => openProperties(contextTargetIcon)) },
+        { id: 'shortcut-properties', label: 'Properties', onSelect: wrap(() => openProperties(contextTargetIcon)) },
       ];
     }
 
@@ -945,7 +1008,7 @@ export function Desktop() {
         dropState: dragFeedback.state,
         feedbackLabel: dragFeedback.label,
         iconType: previewIcon,
-        label: dragGroupIcons.length === 1 ? dragGroupIcons[0].label : `${dragGroupIcons.length} elementos`,
+        label: dragGroupIcons.length === 1 ? dragGroupIcons[0].label : `${dragGroupIcons.length} items`,
         nodes: dragNodes,
         position: { x: moveEvent.clientX, y: moveEvent.clientY },
         positions: latestPositions,
@@ -989,7 +1052,7 @@ export function Desktop() {
             const nextPosition = latestPositions[dragIcon.id];
 
             if (nextPosition) {
-              setIconPosition(dragIcon.id, snapDesktopPosition(nextPosition));
+              setIconPosition(dragIcon.id, snapDesktopPosition(nextPosition, getDesktopLayoutBounds()));
             }
           });
           playSound('click');
@@ -1091,7 +1154,7 @@ export function Desktop() {
       className="ros-desktop"
       data-drop-folder-id={desktopFolderId}
       data-wallpaper={wallpaper}
-      aria-label="Escritorio de Roso OS"
+      aria-label="Roso OS Desktop"
       onClick={handleDesktopClick}
       onContextMenu={handleDesktopContextMenu}
       onPointerDown={handleDesktopPointerDown}
@@ -1109,79 +1172,91 @@ export function Desktop() {
           aria-hidden="true"
         />
       ) : null}
-      <div className="ros-desktop-icons" aria-label="Iconos del escritorio">
-        {desktopIcons.map((icon, index) => {
-          const iconPosition = getDisplayedIconPosition(icon.id, index);
+      <div className="ros-desktop-icons" aria-label="Desktop icons" onScroll={handleDesktopIconsScroll}>
+        <div className="ros-desktop-icons-content" style={{ width: `${desktopIconLayerWidth}px` }}>
+          {desktopIcons.map((icon, index) => {
+            const iconPosition = getDisplayedIconPosition(icon.id, index);
 
-          return (
-            <DesktopIcon
-              draftName={draftName}
-              isDragging={draggingIconIds.includes(icon.id)}
-              isEditing={editingIconId === icon.id}
-              isSelected={selectedIconIdSet.has(icon.id)}
-              key={icon.id}
-              label={icon.label}
-              dropFolderId={icon.node?.type === 'folder' ? icon.node.id : ['folder-shortcut', 'recycle-bin'].includes(icon.kind) ? icon.folderId : undefined}
-              position={iconPosition}
-              renameExtension={icon.node ? getEditableNodeName(icon.node).extension : ''}
-              tone={icon.tone}
-              onContextMenu={(event) => handleIconContextMenu(event, icon)}
-              onFocus={(event) => {
-                if (!editingIconId && event.currentTarget.matches(':focus-visible')) {
+            return (
+              <DesktopIcon
+                draftName={draftName}
+                isDragging={draggingIconIds.includes(icon.id)}
+                isEditing={editingIconId === icon.id}
+                isSelected={selectedIconIdSet.has(icon.id)}
+                key={icon.id}
+                label={icon.label}
+                dropFolderId={icon.node?.type === 'folder' ? icon.node.id : ['folder-shortcut', 'recycle-bin'].includes(icon.kind) ? icon.folderId : undefined}
+                position={iconPosition}
+                renameExtension={icon.node ? getEditableNodeName(icon.node).extension : ''}
+                tone={icon.tone}
+                onContextMenu={(event) => handleIconContextMenu(event, icon)}
+                onFocus={(event) => {
+                  if (!editingIconId && event.currentTarget.matches(':focus-visible')) {
+                    selectSingleIcon(icon.id);
+                  }
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === 'F2' && icon.node && selectedIcons.length <= 1) {
+                    event.preventDefault();
+                    beginRename(icon);
+                  }
+
+                  if (event.key === 'Delete' && icon.node && selectedIcons.length <= 1) {
+                    event.preventDefault();
+                    handleMoveToTrash(icon);
+                  }
+                }}
+                onOpen={(event) => {
+                  event.stopPropagation();
+                  openDesktopIcon(icon);
+                }}
+                onPointerDown={(event) => handleIconPointerDown(event, icon, iconPosition)}
+                onRenameBlur={commitRename}
+                onRenameChange={setDraftName}
+                onRenameKeyDown={(event) => {
+                  if (event.key === 'Enter') {
+                    event.preventDefault();
+                    commitRename();
+                  }
+
+                  if (event.key === 'Escape') {
+                    event.preventDefault();
+                    cancelRename();
+                  }
+                }}
+                onSelect={(event) => {
+                  event.stopPropagation();
+
+                  if (didIconDragRef.current) {
+                    didIconDragRef.current = false;
+                    return;
+                  }
+
+                  closeContextMenu();
+                  closeStartMenu();
+
+                  if (event.ctrlKey || event.metaKey) {
+                    toggleIconSelection(icon.id);
+                    return;
+                  }
+
                   selectSingleIcon(icon.id);
-                }
-              }}
-              onKeyDown={(event) => {
-                if (event.key === 'F2' && icon.node && selectedIcons.length <= 1) {
-                  event.preventDefault();
-                  beginRename(icon);
-                }
-
-                if (event.key === 'Delete' && icon.node && selectedIcons.length <= 1) {
-                  event.preventDefault();
-                  handleMoveToTrash(icon);
-                }
-              }}
-              onOpen={(event) => {
-                event.stopPropagation();
-                openDesktopIcon(icon);
-              }}
-              onPointerDown={(event) => handleIconPointerDown(event, icon, iconPosition)}
-              onRenameBlur={commitRename}
-              onRenameChange={setDraftName}
-              onRenameKeyDown={(event) => {
-                if (event.key === 'Enter') {
-                  event.preventDefault();
-                  commitRename();
-                }
-
-                if (event.key === 'Escape') {
-                  event.preventDefault();
-                  cancelRename();
-                }
-              }}
-              onSelect={(event) => {
-                event.stopPropagation();
-
-                if (didIconDragRef.current) {
-                  didIconDragRef.current = false;
-                  return;
-                }
-
-                closeContextMenu();
-                closeStartMenu();
-
-                if (event.ctrlKey || event.metaKey) {
-                  toggleIconSelection(icon.id);
-                  return;
-                }
-
-                selectSingleIcon(icon.id);
-              }}
-            />
-          );
-        })}
+                }}
+              />
+            );
+          })}
+        </div>
       </div>
+      {refreshEffectKey > 0 ? (
+        <div
+          className="ros-desktop-refresh-effect"
+          key={refreshEffectKey}
+          aria-live="polite"
+          aria-atomic="true"
+        >
+          <span>Refreshing desktop</span>
+        </div>
+      ) : null}
       {dragPreview?.showFloatingPreview ? (
         <div
           className="ros-file-drag-preview"

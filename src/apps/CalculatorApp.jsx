@@ -3,27 +3,27 @@ import { useSystemSound } from '../hooks/useSystemSound.js';
 import { useWindowStore } from '../store/useWindowStore.js';
 
 const calculatorButtons = [
-  { label: 'Limpiar', action: 'clear', tone: 'control' },
-  { label: 'Borrar', action: 'backspace', tone: 'control', ariaLabel: 'Borrar ultimo digito' },
-  { label: '/', action: 'operator', value: '/', tone: 'operator', ariaLabel: 'Dividir' },
-  { label: 'x', action: 'operator', value: '*', tone: 'operator', ariaLabel: 'Multiplicar' },
+  { label: 'Clear', action: 'clear', tone: 'control' },
+  { label: 'Back', action: 'backspace', tone: 'control', ariaLabel: 'Delete last digit' },
+  { label: '/', action: 'operator', value: '/', tone: 'operator', ariaLabel: 'Divide' },
+  { label: 'x', action: 'operator', value: '*', tone: 'operator', ariaLabel: 'Multiply' },
   { label: '7', action: 'digit', value: '7' },
   { label: '8', action: 'digit', value: '8' },
   { label: '9', action: 'digit', value: '9' },
-  { label: '-', action: 'operator', value: '-', tone: 'operator', ariaLabel: 'Restar' },
+  { label: '-', action: 'operator', value: '-', tone: 'operator', ariaLabel: 'Subtract' },
   { label: '4', action: 'digit', value: '4' },
   { label: '5', action: 'digit', value: '5' },
   { label: '6', action: 'digit', value: '6' },
-  { label: '+', action: 'operator', value: '+', tone: 'operator', ariaLabel: 'Sumar' },
+  { label: '+', action: 'operator', value: '+', tone: 'operator', ariaLabel: 'Add' },
   { label: '1', action: 'digit', value: '1' },
   { label: '2', action: 'digit', value: '2' },
   { label: '3', action: 'digit', value: '3' },
-  { label: 'Raiz', action: 'squareRoot', tone: 'function', ariaLabel: 'Raiz cuadrada' },
-  { label: 'Signo', action: 'toggleSign', tone: 'function', ariaLabel: 'Cambiar signo' },
+  { label: 'Sqrt', action: 'squareRoot', tone: 'function', ariaLabel: 'Square root' },
+  { label: 'Sign', action: 'toggleSign', tone: 'function', ariaLabel: 'Change sign' },
   { label: '0', action: 'digit', value: '0' },
   { label: '.', action: 'decimal', value: '.' },
-  { label: '%', action: 'percent', tone: 'function', ariaLabel: 'Porcentaje' },
-  { label: '=', action: 'equals', tone: 'equals', ariaLabel: 'Resultado', wide: true },
+  { label: '%', action: 'percent', tone: 'function', ariaLabel: 'Percent' },
+  { label: '=', action: 'equals', tone: 'equals', ariaLabel: 'Result', wide: true },
 ];
 
 const maxDisplayLength = 13;
@@ -402,17 +402,17 @@ export function CalculatorApp({ windowId }) {
       className="ros-calculator-app"
       ref={calculatorRef}
       tabIndex={0}
-      aria-label="Calculadora"
+      aria-label="Calculator"
       onKeyDown={handleCalculatorKeyDown}
       onPointerDownCapture={focusCalculator}
     >
       <div className="ros-calculator-status" aria-live="polite">
         <span>{pendingOperator ? `${trimDisplayValue(storedValue ?? Number(display))} ${operationLabels[pendingOperator]}` : ' '}</span>
       </div>
-      <output className="ros-calculator-display" data-error={hasError ? 'true' : 'false'} aria-label="Pantalla de calculadora">
+      <output className="ros-calculator-display" data-error={hasError ? 'true' : 'false'} aria-label="Calculator display">
         {display}
       </output>
-      <div className="ros-calculator-keypad" aria-label="Botones de calculadora">
+      <div className="ros-calculator-keypad" aria-label="Calculator buttons">
         {calculatorButtons.map((button) => (
           <button
             className="ros-calculator-button"

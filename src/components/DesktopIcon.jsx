@@ -50,7 +50,7 @@ export function DesktopIcon({
             value={draftName}
             autoFocus
             spellCheck="false"
-            aria-label={`Renombrar ${label}`}
+            aria-label={`Rename ${label}`}
             onBlur={onRenameBlur}
             onChange={(event) => onRenameChange(stripLockedExtension(event.target.value, renameExtension))}
             onClick={(event) => event.stopPropagation()}

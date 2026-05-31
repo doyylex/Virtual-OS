@@ -10,7 +10,7 @@ export function SystemDialog({ actions, children, dialog, onCancel }) {
     >
       <header className="ros-system-dialog-titlebar">
         <span id={`${dialog.id}-title`}>{dialog.title}</span>
-        <button className="ros-system-dialog-close" type="button" aria-label="Cerrar" onClick={onCancel}>
+        <button className="ros-system-dialog-close" type="button" aria-label="Close" onClick={onCancel}>
           X
         </button>
       </header>

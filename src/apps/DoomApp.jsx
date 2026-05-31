@@ -61,7 +61,7 @@ export function DoomApp({ windowId }) {
       script.async = true;
       script.onload = markReady;
       script.onerror = () => {
-        setLoadError('No se pudo cargar el motor de emulacion.');
+        setLoadError('The emulation engine could not be loaded.');
       };
       document.head.appendChild(script);
     } else if (!window.Dos) {
@@ -113,7 +113,7 @@ export function DoomApp({ windowId }) {
       })
       .catch((error) => {
         console.error('Error starting DOOM:', error);
-        setLoadError('No se pudo iniciar DOOM.');
+        setLoadError('DOOM could not be started.');
       });
 
     return () => {
@@ -148,39 +148,39 @@ export function DoomApp({ windowId }) {
 
   return (
     <div className="ros-doom-app">
-      <div className="ros-app-toolbar ros-doom-toolbar" aria-label="Controles de DOOM">
+      <div className="ros-app-toolbar ros-doom-toolbar" aria-label="DOOM controls">
         <div className="ros-doom-toolbar-main">
           <strong>DOOM</strong>
           <span className="ros-doom-legend">
-            Mover: WASD/Flechas | Disparar: CTRL/Clic izq | Puertas/Usar: Espacio
+            Move: WASD/Arrows | Fire: CTRL/Left click | Doors/Use: Space
           </span>
         </div>
         <div className="ros-doom-toolbar-actions">
           <button className="ros-app-toolbar-button ros-doom-restart-button" type="button" onClick={handleRestart}>
-            Reiniciar juego
+            Restart Game
           </button>
         </div>
       </div>
 
       <div className="ros-doom-container">
-        <aside className="ros-doom-help-panel" aria-label="Ayuda de DOOM">
-          <h3>Guia de controles</h3>
+        <aside className="ros-doom-help-panel" aria-label="DOOM help">
+          <h3>Control Guide</h3>
           <div className="ros-doom-controls-list">
-            <div><strong>Moverse:</strong> WASD / Flechas</div>
-            <div><strong>Disparar:</strong> Ctrl / Clic izquierdo</div>
-            <div><strong>Abrir puertas:</strong> Barra espaciadora</div>
-            <div><strong>Desplazar:</strong> Alt + movimiento</div>
-            <div><strong>Armas:</strong> Numeros 1 al 7</div>
-            <div><strong>Captura mouse:</strong> Clic en pantalla, Esc libera</div>
+            <div><strong>Move:</strong> WASD / Arrows</div>
+            <div><strong>Fire:</strong> Ctrl / Left click</div>
+            <div><strong>Open doors:</strong> Spacebar</div>
+            <div><strong>Strafe:</strong> Alt + movement</div>
+            <div><strong>Weapons:</strong> Numbers 1 to 7</div>
+            <div><strong>Mouse capture:</strong> Click screen, Esc releases</div>
           </div>
 
-          <h3>Trucos clasicos</h3>
+          <h3>Classic Cheats</h3>
           <div className="ros-doom-cheat-grid">
-            <strong>iddqd</strong><span>Inmortalidad</span>
-            <strong>idkfa</strong><span>Armas y llaves</span>
-            <strong>idclip</strong><span>Atravesar muros</span>
-            <strong>idchoppers</strong><span>Motosierra</span>
-            <strong>idclevXX</strong><span>Ir al nivel 01-09</span>
+            <strong>iddqd</strong><span>God mode</span>
+            <strong>idkfa</strong><span>Weapons and keys</span>
+            <strong>idclip</strong><span>Walk through walls</span>
+            <strong>idchoppers</strong><span>Chainsaw</span>
+            <strong>idclevXX</strong><span>Go to level 01-09</span>
           </div>
 
           <div className="ros-doom-legal">id Software 1993</div>
@@ -189,7 +189,7 @@ export function DoomApp({ windowId }) {
         <div className="ros-doom-stage">
           {(!isReady || loadError) && (
             <div className="ros-doom-loading">
-              {loadError || 'Cargando motor de emulacion...'}
+              {loadError || 'Loading emulation engine...'}
             </div>
           )}
           <div className="ros-doom-emulator" ref={containerRef} />

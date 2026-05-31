@@ -6,7 +6,7 @@ export function WindowManager() {
   const windows = useWindowStore((state) => state.windows);
 
   return (
-    <div className="ros-window-stage" aria-label="Ventanas abiertas">
+    <div className="ros-window-stage" aria-label="Open windows">
       {windows.map((windowItem) => {
         const app = getAppById(windowItem.appId);
 

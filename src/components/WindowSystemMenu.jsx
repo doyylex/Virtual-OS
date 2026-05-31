@@ -44,7 +44,7 @@ export function WindowSystemMenu({ onClose, position, windowItem }) {
         onClick={(event) => void runAction(event, restoreWindow, 'restore')}
       >
         <span data-icon="restore" aria-hidden="true" />
-        Restaurar
+        Restore
       </button>
       <button
         className="ros-window-system-menu-item"
@@ -53,7 +53,7 @@ export function WindowSystemMenu({ onClose, position, windowItem }) {
         onClick={(event) => void runAction(event, minimizeWindow, 'minimize')}
       >
         <span data-icon="minimize" aria-hidden="true" />
-        Minimizar
+        Minimize
       </button>
       <button
         className="ros-window-system-menu-item"
@@ -63,7 +63,7 @@ export function WindowSystemMenu({ onClose, position, windowItem }) {
         onClick={(event) => void runAction(event, maximizeWindow, 'restore')}
       >
         <span data-icon="maximize" aria-hidden="true" />
-        Maximizar
+        Maximize
       </button>
       <span className="ros-window-system-menu-separator" role="separator" />
       <button
@@ -73,7 +73,7 @@ export function WindowSystemMenu({ onClose, position, windowItem }) {
         onClick={(event) => void runAction(event, closeWindow, 'close')}
       >
         <span data-icon="close" aria-hidden="true" />
-        Cerrar
+        Close
       </button>
     </div>
   );
