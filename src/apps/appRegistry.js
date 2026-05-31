@@ -1,9 +1,14 @@
+import { CalculatorApp } from './CalculatorApp.jsx';
 import { ComputerApp } from './ComputerApp.jsx';
 import { FileExplorerApp } from './FileExplorerApp.jsx';
+import { ImageViewerApp } from './ImageViewerApp.jsx';
 import { NotepadApp } from './NotepadApp.jsx';
+import { PaintApp } from './PaintApp.jsx';
 import { PropertiesApp } from './PropertiesApp.jsx';
+import { RosoMazeApp } from './RosoMazeApp.jsx';
 import { SettingsApp } from './SettingsApp.jsx';
 import { TerminalApp } from './TerminalApp.jsx';
+import { DoomApp } from './DoomApp.jsx';
 
 export const appRegistry = [
   {
@@ -17,6 +22,7 @@ export const appRegistry = [
     minSize: { width: 460, height: 300 },
     quickLaunch: true,
     desktop: true,
+    multiInstance: true,
   },
   {
     id: 'computer',
@@ -29,6 +35,7 @@ export const appRegistry = [
     minSize: { width: 360, height: 260 },
     quickLaunch: true,
     desktop: true,
+    multiInstance: false,
   },
   {
     id: 'notepad',
@@ -41,6 +48,7 @@ export const appRegistry = [
     minSize: { width: 340, height: 250 },
     quickLaunch: true,
     desktop: true,
+    multiInstance: true,
   },
   {
     id: 'terminal',
@@ -53,6 +61,73 @@ export const appRegistry = [
     minSize: { width: 360, height: 240 },
     quickLaunch: true,
     desktop: true,
+    multiInstance: true,
+  },
+  {
+    id: 'calculator',
+    title: 'Calculadora',
+    description: 'Calculadora basica estilo XP.',
+    iconTone: 'calculator',
+    component: CalculatorApp,
+    defaultPosition: { x: 334, y: 126 },
+    defaultSize: { width: 270, height: 350 },
+    minSize: { width: 236, height: 318 },
+    quickLaunch: false,
+    desktop: true,
+    multiInstance: false,
+  },
+  {
+    id: 'paint',
+    title: 'Paint',
+    description: 'Dibujo simple con herramientas basicas.',
+    iconTone: 'paint',
+    component: PaintApp,
+    defaultPosition: { x: 250, y: 94 },
+    defaultSize: { width: 680, height: 500 },
+    minSize: { width: 420, height: 320 },
+    quickLaunch: false,
+    desktop: true,
+    multiInstance: true,
+  },
+  {
+    id: 'roso-maze',
+    title: 'Pac-Man',
+    description: 'El clasico juego arcade de Pac-Man en Roso OS.',
+    iconTone: 'game',
+    component: RosoMazeApp,
+    defaultPosition: { x: 278, y: 104 },
+    defaultSize: { width: 600, height: 470 },
+    minSize: { width: 380, height: 330 },
+    quickLaunch: false,
+    desktop: true,
+    multiInstance: false,
+  },
+  {
+    id: 'doom',
+    title: 'DOOM',
+    description: 'El clasico juego de disparos en primera persona de 1993.',
+    iconTone: 'doom',
+    component: DoomApp,
+    defaultPosition: { x: 200, y: 80 },
+    defaultSize: { width: 640, height: 460 },
+    minSize: { width: 320, height: 240 },
+    quickLaunch: false,
+    desktop: true,
+    multiInstance: false,
+  },
+  {
+    id: 'image-viewer',
+    title: 'Visor de imagenes',
+    description: 'Abre imagenes PNG guardadas en Roso OS.',
+    iconTone: 'image',
+    component: ImageViewerApp,
+    defaultPosition: { x: 286, y: 108 },
+    defaultSize: { width: 560, height: 420 },
+    minSize: { width: 340, height: 260 },
+    quickLaunch: false,
+    desktop: false,
+    hidden: true,
+    multiInstance: false,
   },
   {
     id: 'settings',
@@ -65,6 +140,7 @@ export const appRegistry = [
     minSize: { width: 360, height: 270 },
     quickLaunch: false,
     desktop: true,
+    multiInstance: false,
   },
   {
     id: 'properties',
@@ -78,6 +154,7 @@ export const appRegistry = [
     quickLaunch: false,
     desktop: false,
     hidden: true,
+    multiInstance: false,
   },
 ];
 

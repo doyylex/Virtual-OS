@@ -25,8 +25,13 @@ export function SaveFileDialog({ dialog, onResolve }) {
   );
   const initialFolder = getNode(dialog.initialFolderId);
   const lockedExtension = normalizeExtension(dialog.lockedExtension);
+  const initialFolderPath = initialFolder?.type === 'folder' ? getPath(initialFolder.id) : [];
+  const isInitialFolderAllowed = Boolean(
+    initialFolder?.type === 'folder' &&
+    !initialFolderPath.some((pathNode) => blockedFolderIds.has(pathNode.id)),
+  );
   const [selectedFolderId, setSelectedFolderId] = useState(
-    initialFolder?.type === 'folder' && !blockedFolderIds.has(initialFolder.id) ? initialFolder.id : 'documents',
+    isInitialFolderAllowed ? initialFolder.id : 'documents',
   );
   const [fileName, setFileName] = useState(stripLockedExtension(dialog.defaultValue, lockedExtension));
   const [error, setError] = useState('');
@@ -34,13 +39,16 @@ export function SaveFileDialog({ dialog, onResolve }) {
     () =>
       sortFolders(
         nodes
-          .filter((node) => node.type === 'folder' && !blockedFolderIds.has(node.id))
-          .map((folder) => ({ ...folder, path: getPath(folder.id) })),
+          .filter((node) => node.type === 'folder')
+          .map((folder) => ({ ...folder, path: getPath(folder.id) }))
+          .filter((folder) => !folder.path.some((pathNode) => blockedFolderIds.has(pathNode.id))),
       ),
     [blockedFolderIds, getPath, nodes],
   );
   const selectedFolder = getNode(selectedFolderId);
-  const selectedPath = selectedFolder ? getPath(selectedFolder.id).map((node) => node.name).join('\\') : '';
+  const selectedFolderPath = selectedFolder ? getPath(selectedFolder.id) : [];
+  const isSelectedFolderBlocked = selectedFolderPath.some((pathNode) => blockedFolderIds.has(pathNode.id));
+  const selectedPath = selectedFolderPath.map((node) => node.name).join('\\');
 
   const handleCancel = () => onResolve(null);
 
@@ -52,7 +60,7 @@ export function SaveFileDialog({ dialog, onResolve }) {
       return;
     }
 
-    if (!selectedFolder || blockedFolderIds.has(selectedFolder.id)) {
+    if (!selectedFolder || isSelectedFolderBlocked) {
       setError('Selecciona una carpeta valida.');
       return;
     }

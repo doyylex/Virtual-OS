@@ -113,6 +113,7 @@ export function WindowFrame({ app, children, windowItem }) {
       className="ros-window"
       data-active={isActive ? 'true' : 'false'}
       data-maximized={windowItem.isMaximized ? 'true' : 'false'}
+      data-minimized={windowItem.isMinimized ? 'true' : 'false'}
       data-resizing={isResizing ? 'true' : 'false'}
       data-transition={windowItem.transitionState}
       style={{
@@ -147,7 +148,7 @@ export function WindowFrame({ app, children, windowItem }) {
           isMaximized={windowItem.isMaximized}
           onClose={() => {
             closeSystemMenu();
-            closeWindow(windowItem.id);
+            return closeWindow(windowItem.id);
           }}
           onMaximize={() => {
             closeSystemMenu();

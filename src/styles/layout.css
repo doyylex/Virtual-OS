@@ -55,6 +55,8 @@
   gap: 6px;
   min-width: 0;
   flex: 1;
+  overflow-x: auto;
+  overflow-y: hidden;
   padding: 4px 8px 3px;
 }
 
@@ -85,13 +87,16 @@
 .ros-start-menu-body {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 168px;
-  min-height: 318px;
+  height: 318px;
+  min-height: 0;
 }
 
 .ros-start-menu-column {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  min-height: 0;
+  overflow: auto;
   padding: 10px;
 }
 
@@ -180,6 +185,11 @@
 }
 
 .ros-notepad-app,
+.ros-calculator-app,
+.ros-doom-app,
+.ros-image-viewer-app,
+.ros-maze-app,
+.ros-paint-app,
 .ros-terminal-app {
   display: flex;
   flex-direction: column;

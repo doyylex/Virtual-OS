@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useFileSystemStore } from '../store/useFileSystemStore.js';
 import { formatShortDateTime } from '../services/dateFormat.js';
-import { getExplorerNodeIconType } from '../services/fileIcons.js';
+import { getExplorerNodeIconType, getNodeIconTone, getNodeTypeLabel } from '../services/fileIcons.js';
 import { getOriginalLocationLabel, getPathLabel, getTrashRootNode, isPathInsideTrash } from '../services/trashPaths.js';
 
 const recycleBinFolderId = 'recycle-bin-folder';
@@ -31,7 +31,7 @@ export function PropertiesApp({ launchData }) {
 
       return {
         title: node.name,
-        type: isInTrash ? 'Elemento en Papelera' : node.type === 'folder' ? 'Carpeta' : 'Archivo de texto',
+        type: isInTrash ? 'Elemento en Papelera' : getNodeTypeLabel(node),
         location: getPathLabel(path.slice(0, -1), 'Escritorio'),
         createdAt: formatShortDateTime(node.createdAt, 'Sistema'),
         updatedAt: formatShortDateTime(node.updatedAt, 'Sistema'),
@@ -51,7 +51,7 @@ export function PropertiesApp({ launchData }) {
           : [],
         tone: node.id === recycleBinFolderId
           ? getExplorerNodeIconType(node, trashItemCount)
-          : node.type === 'folder' ? 'folder' : 'notepad',
+          : getNodeIconTone(node),
       };
     }
 

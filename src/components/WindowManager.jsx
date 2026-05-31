@@ -4,13 +4,10 @@ import { WindowFrame } from './WindowFrame.jsx';
 
 export function WindowManager() {
   const windows = useWindowStore((state) => state.windows);
-  const visibleWindows = windows.filter(
-    (windowItem) => !windowItem.isMinimized || windowItem.transitionState === 'minimizing',
-  );
 
   return (
     <div className="ros-window-stage" aria-label="Ventanas abiertas">
-      {visibleWindows.map((windowItem) => {
+      {windows.map((windowItem) => {
         const app = getAppById(windowItem.appId);
 
         if (!app) {

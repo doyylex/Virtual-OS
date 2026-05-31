@@ -5,9 +5,12 @@ const DESKTOP_TASKBAR_OFFSET = 40;
 const TITLEBAR_VISIBLE_WIDTH = 140;
 const TITLEBAR_VISIBLE_HEIGHT = 32;
 const WINDOW_MARGIN = 8;
+const WINDOW_CASCADE_OFFSET = 26;
+const WINDOW_CASCADE_STEPS = 8;
 const TRANSITION_IDLE = 'idle';
 const TRANSITION_MINIMIZING = 'minimizing';
 const TRANSITION_RESTORING = 'restoring';
+const beforeCloseHandlers = new Map();
 
 const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
 
@@ -43,6 +46,23 @@ const constrainResizeGeometry = (position, size, minSize) => {
       height: clamp(size.height, minimumSize.height, bounds.height - nextPosition.y),
     },
   };
+};
+
+const getInitialWindowPosition = (app, size, state) => {
+  if (!app.multiInstance) {
+    return constrainPosition(app.defaultPosition, size);
+  }
+
+  const sameAppWindowCount = state.windows.filter((windowItem) => windowItem.appId === app.id).length;
+  const cascadeStep = sameAppWindowCount % WINDOW_CASCADE_STEPS;
+
+  return constrainPosition(
+    {
+      x: app.defaultPosition.x + cascadeStep * WINDOW_CASCADE_OFFSET,
+      y: app.defaultPosition.y + cascadeStep * WINDOW_CASCADE_OFFSET,
+    },
+    size,
+  );
 };
 
 const bringToFront = (windowId, state, launchData) => {
@@ -163,6 +183,7 @@ export const useWindowStore = create((set) => ({
   activeWindowId: null,
   zCounter: 20,
   launchCounter: 0,
+  instanceCounter: 0,
 
   openApp: (appId, launchData) =>
     set((state) => {
@@ -172,7 +193,9 @@ export const useWindowStore = create((set) => ({
         return state;
       }
 
-      const existingWindow = state.windows.find((windowItem) => windowItem.appId === appId);
+      const existingWindow = app.multiInstance
+        ? null
+        : state.windows.find((windowItem) => windowItem.appId === appId);
 
       if (existingWindow) {
         return bringToFront(existingWindow.id, state, launchData);
@@ -180,13 +203,15 @@ export const useWindowStore = create((set) => ({
 
       const nextZIndex = state.zCounter + 1;
       const nextLaunchToken = state.launchCounter + 1;
+      const nextInstanceCounter = state.instanceCounter + 1;
       const size = { ...app.defaultSize };
-      const position = constrainPosition(app.defaultPosition, size);
-      const windowId = `window-${app.id}`;
+      const position = getInitialWindowPosition(app, size, state);
+      const windowId = app.multiInstance ? `window-${app.id}-${nextInstanceCounter}` : `window-${app.id}`;
 
       return {
         zCounter: nextZIndex,
         launchCounter: nextLaunchToken,
+        instanceCounter: app.multiInstance ? nextInstanceCounter : state.instanceCounter,
         activeWindowId: windowId,
         windows: [
           ...state.windows,
@@ -209,7 +234,22 @@ export const useWindowStore = create((set) => ({
       };
     }),
 
-  closeWindow: (windowId) =>
+  closeWindow: async (windowId) => {
+    const beforeClose = beforeCloseHandlers.get(windowId);
+
+    if (beforeClose) {
+      try {
+        const canClose = await beforeClose();
+
+        if (!canClose) {
+          return false;
+        }
+      } catch {
+        return false;
+      }
+    }
+
+    beforeCloseHandlers.delete(windowId);
     set((state) => {
       const nextWindows = state.windows.filter((windowItem) => windowItem.id !== windowId);
 
@@ -217,7 +257,20 @@ export const useWindowStore = create((set) => ({
         windows: nextWindows,
         activeWindowId: getNextActiveWindowId(nextWindows),
       };
-    }),
+    });
+
+    return true;
+  },
+
+  registerBeforeClose: (windowId, handler) => {
+    beforeCloseHandlers.set(windowId, handler);
+
+    return () => {
+      if (beforeCloseHandlers.get(windowId) === handler) {
+        beforeCloseHandlers.delete(windowId);
+      }
+    };
+  },
 
   setWindowTitle: (windowId, title) =>
     set((state) => {

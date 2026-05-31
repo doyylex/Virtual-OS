@@ -18,6 +18,8 @@ const createDialog = (kind, options, resolve) => ({
   icon: options.icon ?? (kind === 'confirm' ? 'question' : 'info'),
   allowEmpty: options.allowEmpty ?? false,
   blockedFolderIds: options.blockedFolderIds ?? [],
+  choices: options.choices ?? [],
+  cancelValue: options.cancelValue ?? null,
   validate: options.validate,
   resolve,
 });
@@ -29,6 +31,10 @@ const getDialogCancelValue = (dialog) => {
 
   if (dialog.kind === 'alert') {
     return true;
+  }
+
+  if (dialog.kind === 'choice') {
+    return dialog.cancelValue;
   }
 
   return null;
@@ -52,6 +58,12 @@ export const useDialogStore = create((set, get) => ({
   showAlert: (options = {}) =>
     new Promise((resolve) => {
       const dialog = createDialog('alert', options, resolve);
+      set((state) => ({ dialogs: [...state.dialogs, dialog] }));
+    }),
+
+  showChoiceDialog: (options = {}) =>
+    new Promise((resolve) => {
+      const dialog = createDialog('choice', options, resolve);
       set((state) => ({ dialogs: [...state.dialogs, dialog] }));
     }),
 

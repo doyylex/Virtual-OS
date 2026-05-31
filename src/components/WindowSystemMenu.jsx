@@ -8,7 +8,7 @@ export function WindowSystemMenu({ onClose, position, windowItem }) {
   const restoreWindow = useWindowStore((state) => state.restoreWindow);
   const playSound = useSystemSound();
 
-  const runAction = (event, action, sound) => {
+  const runAction = async (event, action, sound) => {
     event.preventDefault();
     event.stopPropagation();
 
@@ -17,8 +17,11 @@ export function WindowSystemMenu({ onClose, position, windowItem }) {
     }
 
     onClose();
-    playSound(sound);
-    action(windowItem.id);
+    const result = await action(windowItem.id);
+
+    if (result !== false) {
+      playSound(sound);
+    }
   };
 
   return (
@@ -38,7 +41,7 @@ export function WindowSystemMenu({ onClose, position, windowItem }) {
         type="button"
         role="menuitem"
         disabled={!windowItem.isMaximized}
-        onClick={(event) => runAction(event, restoreWindow, 'restore')}
+        onClick={(event) => void runAction(event, restoreWindow, 'restore')}
       >
         <span data-icon="restore" aria-hidden="true" />
         Restaurar
@@ -47,7 +50,7 @@ export function WindowSystemMenu({ onClose, position, windowItem }) {
         className="ros-window-system-menu-item"
         type="button"
         role="menuitem"
-        onClick={(event) => runAction(event, minimizeWindow, 'minimize')}
+        onClick={(event) => void runAction(event, minimizeWindow, 'minimize')}
       >
         <span data-icon="minimize" aria-hidden="true" />
         Minimizar
@@ -57,7 +60,7 @@ export function WindowSystemMenu({ onClose, position, windowItem }) {
         type="button"
         role="menuitem"
         disabled={windowItem.isMaximized}
-        onClick={(event) => runAction(event, maximizeWindow, 'restore')}
+        onClick={(event) => void runAction(event, maximizeWindow, 'restore')}
       >
         <span data-icon="maximize" aria-hidden="true" />
         Maximizar
@@ -67,7 +70,7 @@ export function WindowSystemMenu({ onClose, position, windowItem }) {
         className="ros-window-system-menu-item ros-window-system-menu-item-danger"
         type="button"
         role="menuitem"
-        onClick={(event) => runAction(event, closeWindow, 'close')}
+        onClick={(event) => void runAction(event, closeWindow, 'close')}
       >
         <span data-icon="close" aria-hidden="true" />
         Cerrar

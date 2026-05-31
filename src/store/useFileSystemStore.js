@@ -100,6 +100,21 @@ const canMoveNodeToFolder = (nodes, nodeId, targetFolderId) => {
   return true;
 };
 
+const canMoveTrashedNodeToFolder = (nodes, nodeId, targetFolderId) => {
+  const node = nodes.find((item) => item.id === nodeId);
+  const targetFolder = getTargetFolder(nodes, targetFolderId);
+
+  if (!node || !targetFolder || protectedNodeIds.has(node.id) || !isNodeInsideTrash(nodes, node.id)) {
+    return false;
+  }
+
+  if (node.type === 'folder' && (node.id === targetFolder.id || getDescendantIds(nodes, node.id).includes(targetFolder.id))) {
+    return false;
+  }
+
+  return true;
+};
+
 const cloneNodeTree = (nodes, nodeId, targetFolderId) => {
   const sourceNode = nodes.find((node) => node.id === nodeId);
   const sourceIds = [nodeId, ...getDescendantIds(nodes, nodeId)];
@@ -334,7 +349,7 @@ export const useFileSystemStore = create((set, get) => ({
     const state = get();
     const parent = state.nodes.find((node) => node.id === parentId && node.type === 'folder');
 
-    if (!parent || parent.id === recycleBinFolderId) {
+    if (!parent || parent.id === recycleBinFolderId || isNodeInsideTrash(state.nodes, parent.id)) {
       throw new Error('No se puede guardar en esta ubicacion.');
     }
 
@@ -523,6 +538,59 @@ export const useFileSystemStore = create((set, get) => ({
     const movedIds = get().moveNodesToFolder([nodeId], targetFolderId);
 
     return movedIds[0] ?? null;
+  },
+
+  moveNodesFromTrashToFolder: (nodeIds, targetFolderId) => {
+    let movedIds = [];
+
+    set((state) => {
+      const sourceNodeIds = getTopLevelNodeIds(state.nodes, nodeIds);
+      let nodes = state.nodes;
+      const movedTreeIds = new Set();
+
+      sourceNodeIds.forEach((nodeId) => {
+        if (!canMoveTrashedNodeToFolder(nodes, nodeId, targetFolderId)) {
+          return;
+        }
+
+        const targetNode = nodes.find((node) => node.id === nodeId);
+        const treeIds = [nodeId, ...getDescendantIds(nodes, nodeId)];
+        const nextName = getUniqueNodeName(nodes, targetFolderId, targetNode.name, nodeId) ?? targetNode.name;
+
+        treeIds.forEach((treeNodeId) => movedTreeIds.add(treeNodeId));
+        nodes = nodes.map((node) => {
+          if (node.id !== nodeId) {
+            return node;
+          }
+
+          const restoredNode = {
+            ...node,
+            parentId: targetFolderId,
+            name: nextName,
+            updatedAt: Date.now(),
+          };
+
+          delete restoredNode.originalParentId;
+          delete restoredNode.trashedAt;
+
+          return restoredNode;
+        });
+        movedIds = [...movedIds, nodeId];
+      });
+
+      if (movedIds.length === 0) {
+        return state;
+      }
+
+      persistNodes(nodes);
+      return {
+        nodes,
+        clipboard: shouldClearClipboard(state.clipboard, movedTreeIds) ? null : state.clipboard,
+        selectedNodeIds: movedIds,
+      };
+    });
+
+    return movedIds;
   },
 
   duplicateNode: (nodeId) => {

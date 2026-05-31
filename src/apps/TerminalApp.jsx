@@ -25,16 +25,26 @@ export function TerminalApp({ windowId }) {
   const moveNodeToTrash = useFileSystemStore((state) => state.moveNodeToTrash);
   const closeWindow = useWindowStore((state) => state.closeWindow);
   const openApp = useWindowStore((state) => state.openApp);
+  const setWindowTitle = useWindowStore((state) => state.setWindowTitle);
   const windowCount = useWindowStore((state) => state.windows.length);
   const setWallpaper = useUiStore((state) => state.setWallpaper);
   const isSoundEnabled = useUiStore((state) => state.isSoundEnabled);
   const playSound = useSystemSound();
   const promptPath = getTerminalPath(nodes, currentFolderId);
   const terminalWindowId = windowId ?? 'window-terminal';
+  const terminalInputId = `${terminalWindowId}-input`;
 
   useEffect(() => {
     terminalEndRef.current?.scrollIntoView({ block: 'end' });
   }, [history]);
+
+  useEffect(() => {
+    if (!windowId) {
+      return;
+    }
+
+    setWindowTitle(windowId, `Terminal - ${promptPath}`);
+  }, [promptPath, setWindowTitle, windowId]);
 
   const getCommandContext = () => ({
     currentFolderId,
@@ -191,9 +201,9 @@ export function TerminalApp({ windowId }) {
       </div>
 
       <form className="ros-terminal-prompt" onSubmit={handleSubmit}>
-        <label htmlFor="ros-terminal-input">{promptPath}&gt;</label>
+        <label htmlFor={terminalInputId}>{promptPath}&gt;</label>
         <input
-          id="ros-terminal-input"
+          id={terminalInputId}
           ref={inputRef}
           value={input}
           autoComplete="off"

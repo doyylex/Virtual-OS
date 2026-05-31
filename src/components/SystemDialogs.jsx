@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useDialogStore } from '../store/useDialogStore.js';
 import { AlertDialog } from './AlertDialog.jsx';
+import { ChoiceDialog } from './ChoiceDialog.jsx';
 import { ConfirmDialog } from './ConfirmDialog.jsx';
 import { PromptDialog } from './PromptDialog.jsx';
 import { SaveFileDialog } from './SaveFileDialog.jsx';
@@ -35,6 +36,7 @@ export function SystemDialogs() {
   const handleResolve = (value) => resolveDialog(activeDialog.id, value);
   const dialogComponentByKind = {
     alert: <AlertDialog dialog={activeDialog} onResolve={handleResolve} />,
+    choice: <ChoiceDialog dialog={activeDialog} onResolve={handleResolve} />,
     confirm: <ConfirmDialog dialog={activeDialog} onResolve={handleResolve} />,
     prompt: <PromptDialog dialog={activeDialog} onResolve={handleResolve} />,
     saveFile: <SaveFileDialog dialog={activeDialog} onResolve={handleResolve} />,

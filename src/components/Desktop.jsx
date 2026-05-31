@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { getDesktopApps } from '../apps/appRegistry.js';
 import { findNextDesktopPosition, getDesktopGridPosition, snapDesktopPosition } from '../services/desktopLayout.js';
+import { dispatchPaintFileDrop, getFileDropTargetFromPoint } from '../services/fileDropTargets.js';
+import { getNodeIconTone, isImageFileName, isTextFileName } from '../services/fileIcons.js';
 import { getEditableNodeName } from '../services/fileNames.js';
 import { useSystemSound } from '../hooks/useSystemSound.js';
 import { useDialogStore } from '../store/useDialogStore.js';
@@ -51,27 +53,6 @@ const clearActiveFileDropTargets = () => {
     .forEach((element) => {
       element.dataset.fileDropActive = 'false';
     });
-};
-
-const getFileDropTargetFromPoint = (x, y, draggedElement) => {
-  const previousPointerEvents = draggedElement.style.pointerEvents;
-  draggedElement.style.pointerEvents = 'none';
-
-  const targetElement = document.elementFromPoint(x, y)?.closest('[data-drop-folder-id]');
-  draggedElement.style.pointerEvents = previousPointerEvents;
-
-  if (!(targetElement instanceof HTMLElement)) {
-    return null;
-  }
-
-  if (targetElement.dataset.dropFolderId === desktopFolderId) {
-    return null;
-  }
-
-  return {
-    element: targetElement,
-    folderId: targetElement.dataset.dropFolderId,
-  };
 };
 
 const desktopAppIcons = getDesktopApps().map((app) => ({
@@ -200,7 +181,7 @@ export function Desktop() {
       sortDesktopNodes(nodes.filter((node) => node.parentId === desktopFolderId)).map((node) => ({
         id: `fs:${node.id}`,
         label: node.name,
-        tone: node.type === 'folder' ? 'folder' : 'notepad',
+        tone: getNodeIconTone(node),
         kind: node.type,
         node,
       })),
@@ -285,6 +266,48 @@ export function Desktop() {
     return true;
   }, [nodes]);
 
+  const canDropNodesToPaint = useCallback((items) =>
+    items.length === 1 &&
+    items[0].type === 'file' &&
+    isImageFileName(items[0].name) &&
+    !isNodeInsideTrash(nodes, items[0].id), [nodes]);
+
+  const getDropFolderLabel = useCallback((folderId) => {
+    if (folderId === desktopFolderId) {
+      return 'Escritorio';
+    }
+
+    if (folderId === recycleBinFolderId) {
+      return 'Papelera';
+    }
+
+    return nodes.find((node) => node.id === folderId)?.name ?? 'carpeta';
+  }, [nodes]);
+
+  const getDragDropFeedback = useCallback((dropTarget, isValidDropTarget, isFileDrag) => {
+    if (!isFileDrag) {
+      return { state: 'neutral', label: 'Mover icono' };
+    }
+
+    if (!dropTarget) {
+      return { state: 'neutral', label: 'Soltar para reubicar' };
+    }
+
+    if (!isValidDropTarget) {
+      return { state: 'invalid', label: 'No se puede soltar aqui' };
+    }
+
+    if (dropTarget.type === 'paint') {
+      return { state: 'valid', label: 'Editar en Paint' };
+    }
+
+    if (dropTarget.folderId === recycleBinFolderId) {
+      return { state: 'valid', label: 'Enviar a Papelera' };
+    }
+
+    return { state: 'valid', label: `Mover a ${getDropFolderLabel(dropTarget.folderId)}` };
+  }, [getDropFolderLabel]);
+
   const openDesktopIcon = (icon) => {
     closeContextMenu();
     closeStartMenu();
@@ -307,8 +330,14 @@ export function Desktop() {
       return;
     }
 
-    if (icon.node?.type === 'file' && icon.node.name.toLowerCase().endsWith('.txt')) {
+    if (icon.node?.type === 'file' && isTextFileName(icon.node.name)) {
       openApp('notepad', { fileId: icon.node.id });
+      playSound('open');
+      return;
+    }
+
+    if (icon.node?.type === 'file' && isImageFileName(icon.node.name)) {
+      openApp('image-viewer', { fileId: icon.node.id });
       playSound('open');
     }
   };
@@ -367,7 +396,7 @@ export function Desktop() {
 
     if (icon?.node && draftName.trim()) {
       renameNode(icon.node.id, draftName);
-      playSound('click');
+      playSound('rename');
     }
 
     cancelRename();
@@ -524,9 +553,12 @@ export function Desktop() {
     }
 
     closeContextMenu();
-    moveNodeToTrash(icon.node.id);
-    clearIconSelection();
-    playSound('close');
+    const movedIds = moveNodeToTrash(icon.node.id);
+
+    if (movedIds.length > 0) {
+      clearIconSelection();
+      playSound('trash');
+    }
   }, [clearIconSelection, closeContextMenu, moveNodeToTrash, playSound]);
 
   const getElementCountLabel = (items) =>
@@ -566,7 +598,7 @@ export function Desktop() {
 
     if (confirmed) {
       emptyTrash();
-      playSound('close');
+      playSound('delete');
     }
   };
 
@@ -587,7 +619,7 @@ export function Desktop() {
 
     if (confirmed) {
       restoreAllFromTrash();
-      playSound('open');
+      playSound('restoreFile');
     }
   };
 
@@ -843,6 +875,7 @@ export function Desktop() {
       return positions;
     }, {});
     let latestDropTarget = null;
+    let latestInvalidDropTarget = false;
     let activeDropElement = null;
 
     element.setPointerCapture(pointerId);
@@ -884,19 +917,40 @@ export function Desktop() {
         return positions;
       }, {});
       setDraggingIconIds(dragGroupIcons.map((dragIcon) => dragIcon.id));
+
+      const dropTarget = dragNodeIds.length > 0
+        ? getFileDropTargetFromPoint(moveEvent.clientX, moveEvent.clientY, element, {
+            ignoreFolderIds: [desktopFolderId],
+          })
+        : null;
+      const isValidDropTarget = Boolean(
+        dropTarget &&
+        (dropTarget.type === 'paint'
+          ? canDropNodesToPaint(dragNodes)
+          : dragNodes.every((node) => canDropNodeToFolder(node, dropTarget.folderId))),
+      );
+      latestDropTarget =
+        isValidDropTarget ? dropTarget : null;
+      latestInvalidDropTarget = Boolean(dropTarget && !isValidDropTarget);
+      setActiveDropTarget(latestDropTarget);
+
+      const dragFeedback = getDragDropFeedback(dropTarget, isValidDropTarget, dragNodeIds.length > 0);
+      const previewIcon = dragNodes[0]
+        ? getNodeIconTone(dragNodes[0], recycleBinItemsCount)
+        : dragGroupIcons[0]?.tone ?? 'folder';
+      const showFloatingPreview = dragGroupIcons.length > 1 || Boolean(dropTarget);
+
       setDragPreview({
         count: dragGroupIcons.length,
+        dropState: dragFeedback.state,
+        feedbackLabel: dragFeedback.label,
+        iconType: previewIcon,
+        label: dragGroupIcons.length === 1 ? dragGroupIcons[0].label : `${dragGroupIcons.length} elementos`,
         nodes: dragNodes,
         position: { x: moveEvent.clientX, y: moveEvent.clientY },
         positions: latestPositions,
+        showFloatingPreview,
       });
-
-      const dropTarget = dragNodeIds.length > 0 ? getFileDropTargetFromPoint(moveEvent.clientX, moveEvent.clientY, element) : null;
-      latestDropTarget =
-        dropTarget && dragNodes.every((node) => canDropNodeToFolder(node, dropTarget.folderId))
-          ? dropTarget
-          : null;
-      setActiveDropTarget(latestDropTarget);
     };
 
     const handlePointerUp = async () => {
@@ -911,13 +965,15 @@ export function Desktop() {
       if (didMove) {
         let movedNodeIds = [];
 
-        if (latestDropTarget?.folderId === recycleBinFolderId && dragNodeIds.length > 0) {
+        if (latestDropTarget?.type === 'paint' && dragNodes.length === 1) {
+          dispatchPaintFileDrop(latestDropTarget.windowId, dragNodes[0].id);
+        } else if (latestDropTarget?.folderId === recycleBinFolderId && dragNodeIds.length > 0) {
           const confirmed = await confirmMoveNodesToTrash(dragNodes);
 
           if (confirmed) {
             movedNodeIds = moveNodesToTrash(dragNodeIds);
             clearIconSelection();
-            playSound('close');
+            playSound('trash');
           }
         } else if (latestDropTarget?.folderId && dragNodeIds.length > 0) {
           movedNodeIds = moveNodesToFolder(dragNodeIds, latestDropTarget.folderId);
@@ -928,7 +984,7 @@ export function Desktop() {
           }
         }
 
-        if (!latestDropTarget && movedNodeIds.length === 0) {
+        if (!latestDropTarget && !latestInvalidDropTarget && movedNodeIds.length === 0) {
           dragGroupIcons.forEach((dragIcon) => {
             const nextPosition = latestPositions[dragIcon.id];
 
@@ -1126,9 +1182,10 @@ export function Desktop() {
           );
         })}
       </div>
-      {dragPreview?.count > 1 ? (
+      {dragPreview?.showFloatingPreview ? (
         <div
           className="ros-file-drag-preview"
+          data-drop-state={dragPreview.dropState}
           style={{
             left: `${dragPreview.position.x}px`,
             top: `${dragPreview.position.y}px`,
@@ -1137,9 +1194,12 @@ export function Desktop() {
         >
           <span
             className="ros-file-node-icon"
-            data-type={dragPreview.nodes[0]?.type === 'file' ? 'file' : 'folder'}
+            data-type={dragPreview.iconType}
           />
-          <span>{dragPreview.count} elementos</span>
+          <span className="ros-file-drag-preview-text">
+            <span>{dragPreview.label}</span>
+            {dragPreview.feedbackLabel ? <small>{dragPreview.feedbackLabel}</small> : null}
+          </span>
         </div>
       ) : null}
       {contextMenu ? <DesktopContextMenu items={getContextMenuItems()} position={contextMenu.position} /> : null}

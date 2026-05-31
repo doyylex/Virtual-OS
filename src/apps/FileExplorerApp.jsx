@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSystemSound } from '../hooks/useSystemSound.js';
 import { findNextDesktopPosition, snapDesktopPosition } from '../services/desktopLayout.js';
 import { useDialogStore } from '../store/useDialogStore.js';
@@ -6,9 +6,11 @@ import { useDesktopLayoutStore } from '../store/useDesktopLayoutStore.js';
 import { useFileSystemStore } from '../store/useFileSystemStore.js';
 import { useWindowStore } from '../store/useWindowStore.js';
 import { DesktopContextMenu } from '../components/DesktopContextMenu.jsx';
+import { dispatchPaintFileDrop, getFileDropTargetFromPoint } from '../services/fileDropTargets.js';
 import { getEditableNodeName, stripLockedExtension } from '../services/fileNames.js';
-import { getExplorerNodeIconType } from '../services/fileIcons.js';
+import { getExplorerNodeIconType, getNodeTypeLabel, isImageFileName, isTextFileName } from '../services/fileIcons.js';
 import { formatShortDateTime } from '../services/dateFormat.js';
+import { nodeMatchesSearchQuery, normalizeSearchText } from '../services/search.js';
 import { getOriginalLocationLabel, getPathLabel, getTrashRootNode, isPathInsideTrash } from '../services/trashPaths.js';
 
 const CONTEXT_MENU_WIDTH = 214;
@@ -52,29 +54,10 @@ const getDesktopDropPosition = (clientX, clientY) =>
     y: clientY - desktopDropIconOffset.y,
   });
 
-const getFileDropTargetFromPoint = (x, y, draggedElement) => {
-  const previousPointerEvents = draggedElement.style.pointerEvents;
-  draggedElement.style.pointerEvents = 'none';
-
-  const targetElement = document.elementFromPoint(x, y)?.closest('[data-drop-folder-id]');
-  draggedElement.style.pointerEvents = previousPointerEvents;
-
-  if (!(targetElement instanceof HTMLElement)) {
-    return null;
-  }
-
-  return {
-    element: targetElement,
-    folderId: targetElement.dataset.dropFolderId,
-  };
-};
-
 const getContextMenuPosition = (event, itemCount) => ({
   x: Math.max(4, Math.min(event.clientX, window.innerWidth - CONTEXT_MENU_WIDTH - 8)),
   y: Math.max(4, Math.min(event.clientY, window.innerHeight - TASKBAR_HEIGHT - itemCount * CONTEXT_MENU_ITEM_HEIGHT - 10)),
 });
-
-const getNodeTypeLabel = (node) => (node.type === 'folder' ? 'Carpeta' : 'Archivo de texto');
 
 const getFileSize = (node) => {
   if (node?.type !== 'file') {
@@ -134,24 +117,36 @@ const getSortHint = (sortBy, sortDirection) => {
   return sortDirection === 'asc' ? 'A-Z' : 'Z-A';
 };
 
+const isNodeInsideFolder = (nodes, node, folderId) => {
+  let currentNode = node;
+
+  while (currentNode?.parentId) {
+    if (currentNode.parentId === folderId) {
+      return true;
+    }
+
+    currentNode = nodes.find((candidateNode) => candidateNode.id === currentNode.parentId);
+  }
+
+  return false;
+};
+
 export function FileExplorerApp({ launchData, windowId }) {
   const [contextMenu, setContextMenu] = useState(null);
   const [draftName, setDraftName] = useState('');
   const [dragPreview, setDragPreview] = useState(null);
   const [draggingNodeIds, setDraggingNodeIds] = useState([]);
   const [editingNodeId, setEditingNodeId] = useState(null);
+  const [searchQuery, setSearchQuery] = useState(() => launchData?.searchQuery ?? '');
+  const [selectedNodeIds, setSelectedNodeIdsState] = useState([]);
   const [sortBy, setSortBy] = useState('name');
   const [sortDirection, setSortDirection] = useState('asc');
   const [viewMode, setViewMode] = useState('details');
+  const searchInputRef = useRef(null);
   const nodes = useFileSystemStore((state) => state.nodes);
   const storedCurrentFolderId = useFileSystemStore((state) => state.currentFolderId);
-  const selectedNodeIds = useFileSystemStore((state) => state.selectedNodeIds);
   const isReady = useFileSystemStore((state) => state.isReady);
   const error = useFileSystemStore((state) => state.error);
-  const clearSelection = useFileSystemStore((state) => state.clearSelection);
-  const selectNode = useFileSystemStore((state) => state.selectNode);
-  const setSelectedNodes = useFileSystemStore((state) => state.setSelectedNodes);
-  const toggleSelectedNode = useFileSystemStore((state) => state.toggleSelectedNode);
   const setStoredCurrentFolder = useFileSystemStore((state) => state.setCurrentFolder);
   const createFolder = useFileSystemStore((state) => state.createFolder);
   const createFile = useFileSystemStore((state) => state.createFile);
@@ -163,6 +158,7 @@ export function FileExplorerApp({ launchData, windowId }) {
   const pasteClipboardToFolder = useFileSystemStore((state) => state.pasteClipboardToFolder);
   const renameNode = useFileSystemStore((state) => state.renameNode);
   const setClipboardNodes = useFileSystemStore((state) => state.setClipboardNodes);
+  const moveNodesFromTrashToFolder = useFileSystemStore((state) => state.moveNodesFromTrashToFolder);
   const moveNodesToFolder = useFileSystemStore((state) => state.moveNodesToFolder);
   const moveNodesToTrash = useFileSystemStore((state) => state.moveNodesToTrash);
   const moveNodeToTrash = useFileSystemStore((state) => state.moveNodeToTrash);
@@ -190,15 +186,33 @@ export function FileExplorerApp({ launchData, windowId }) {
   const currentFolderId = history[historyIndex] ?? 'root';
 
   const folderChildren = getChildren(currentFolderId);
+  const normalizedSearchQuery = normalizeSearchText(searchQuery);
+  const isSearchActive = normalizedSearchQuery.length > 0;
+  const searchResults = useMemo(
+    () =>
+      isSearchActive
+        ? nodes.filter((node) =>
+            node.id !== currentFolderId &&
+            isNodeInsideFolder(nodes, node, currentFolderId) &&
+            nodeMatchesSearchQuery(node, normalizedSearchQuery),
+          )
+        : [],
+    [currentFolderId, isSearchActive, nodes, normalizedSearchQuery],
+  );
   const children = useMemo(
-    () => sortExplorerNodes(folderChildren, sortBy, sortDirection),
-    [folderChildren, sortBy, sortDirection],
+    () => sortExplorerNodes(isSearchActive ? searchResults : folderChildren, sortBy, sortDirection),
+    [folderChildren, isSearchActive, searchResults, sortBy, sortDirection],
   );
   const path = getPath(currentFolderId);
-  const selectedNodeIdSet = useMemo(() => new Set(selectedNodeIds), [selectedNodeIds]);
+  const visibleNodeIdSet = useMemo(() => new Set(children.map((node) => node.id)), [children]);
+  const visibleSelectedNodeIds = useMemo(
+    () => selectedNodeIds.filter((nodeId) => visibleNodeIdSet.has(nodeId)),
+    [selectedNodeIds, visibleNodeIdSet],
+  );
+  const selectedNodeIdSet = useMemo(() => new Set(visibleSelectedNodeIds), [visibleSelectedNodeIds]);
   const selectedNodes = useMemo(
-    () => selectedNodeIds.map((nodeId) => nodes.find((node) => node.id === nodeId)).filter(Boolean),
-    [nodes, selectedNodeIds],
+    () => visibleSelectedNodeIds.map((nodeId) => nodes.find((node) => node.id === nodeId)).filter(Boolean),
+    [nodes, visibleSelectedNodeIds],
   );
   const hasSingleSelection = selectedNodes.length === 1;
   const hasMultipleSelection = selectedNodes.length > 1;
@@ -222,6 +236,7 @@ export function FileExplorerApp({ launchData, windowId }) {
       ),
   );
   const trashItemCount = nodes.filter((node) => node.parentId === recycleBinFolderId).length;
+  const trimmedSearchQuery = searchQuery.trim();
   const canGoBack = historyIndex > 0;
   const canGoForward = historyIndex < history.length - 1;
   const canGoUp = Boolean(currentFolder?.parentId);
@@ -251,6 +266,8 @@ export function FileExplorerApp({ launchData, windowId }) {
     selectedNodes.length > 0 && selectedNodes.every((node) => !protectedNodeIds.has(node.id)),
   );
   const addressText = path.length > 0 ? path.map((node) => node.name).join('\\') : 'C:';
+  const searchScopeText = path.length > 0 ? path.map((node) => node.name).join('\\') : 'C:';
+  const explorerSearchInputId = `${windowId ?? 'explorer'}-search`;
   const selectedNodeParentPath = selectedNode
     ? getPathLabel(getPath(selectedNode.parentId))
     : '';
@@ -264,6 +281,7 @@ export function FileExplorerApp({ launchData, windowId }) {
     ? nodes.filter((node) => node.parentId === selectedNode.id).length
     : 0;
   const selectedNodeSize = getFileSizeLabel(selectedNode);
+  const isSelectedNodeImage = selectedNode?.type === 'file' && isImageFileName(selectedNode.name);
   const selectedFolderCount = selectedNodes.filter((node) => node.type === 'folder').length;
   const selectedFileCount = selectedNodes.filter((node) => node.type === 'file').length;
 
@@ -276,13 +294,41 @@ export function FileExplorerApp({ launchData, windowId }) {
 
     return node?.type === 'folder' && !isPathInsideTrash(getPath(node.id)) ? node.id : undefined;
   };
+  const setSelectedNodes = (nodeIds) => {
+    setSelectedNodeIdsState([...new Set(nodeIds.filter(Boolean))]);
+  };
   const clearExplorerSelection = () => {
-    clearSelection();
+    setSelectedNodes([]);
     setSelectionAnchorNodeId(null);
   };
   const selectSingleNode = (nodeId) => {
-    selectNode(nodeId);
+    setSelectedNodes(nodeId ? [nodeId] : []);
     setSelectionAnchorNodeId(nodeId ?? null);
+  };
+  const handleSearchChange = (value) => {
+    if (!normalizedSearchQuery && normalizeSearchText(value)) {
+      playSound('search');
+    }
+
+    setSearchQuery(value);
+    clearExplorerSelection();
+    closeContextMenu();
+    cancelRename();
+  };
+  const clearSearch = () => {
+    handleSearchChange('');
+    searchInputRef.current?.focus();
+  };
+  const toggleSelectedNode = (nodeId) => {
+    if (!nodeId) {
+      return;
+    }
+
+    setSelectedNodeIdsState((currentNodeIds) =>
+      currentNodeIds.includes(nodeId)
+        ? currentNodeIds.filter((selectedNodeId) => selectedNodeId !== nodeId)
+        : [...currentNodeIds, nodeId],
+    );
   };
   const getRangeSelectionNodeIds = (anchorNodeId, targetNodeId) => {
     const anchorIndex = children.findIndex((node) => node.id === anchorNodeId);
@@ -301,7 +347,7 @@ export function FileExplorerApp({ launchData, windowId }) {
     closeContextMenu();
 
     if (event.shiftKey) {
-      const anchorNodeId = selectionAnchorNodeId ?? selectedNodeIds[0] ?? node.id;
+      const anchorNodeId = selectionAnchorNodeId ?? visibleSelectedNodeIds[0] ?? node.id;
       setSelectedNodes(getRangeSelectionNodeIds(anchorNodeId, node.id));
       return;
     }
@@ -320,8 +366,11 @@ export function FileExplorerApp({ launchData, windowId }) {
       return;
     }
 
-    setWindowTitle(windowId, `Explorador - ${currentFolderTitle}`);
-  }, [currentFolderTitle, setWindowTitle, windowId]);
+    setWindowTitle(
+      windowId,
+      isSearchActive ? `Explorador - Buscar "${trimmedSearchQuery}"` : `Explorador - ${currentFolderTitle}`,
+    );
+  }, [currentFolderTitle, isSearchActive, setWindowTitle, trimmedSearchQuery, windowId]);
 
   const handleSortChange = (nextSortBy) => {
     closeContextMenu();
@@ -381,25 +430,25 @@ export function FileExplorerApp({ launchData, windowId }) {
 
   const openFolder = (folderId) => {
     if (navigateToFolder(folderId)) {
-      playSound('open');
+      playSound('navigation');
     }
   };
 
   const goBack = () => {
     if (canGoBack && goToHistoryIndex(historyIndex - 1)) {
-      playSound('click');
+      playSound('navigation');
     }
   };
 
   const goForward = () => {
     if (canGoForward && goToHistoryIndex(historyIndex + 1)) {
-      playSound('click');
+      playSound('navigation');
     }
   };
 
   const goUp = () => {
     if (currentFolder?.parentId && navigateToFolder(currentFolder.parentId)) {
-      playSound('click');
+      playSound('navigation');
     }
   };
 
@@ -531,7 +580,7 @@ export function FileExplorerApp({ launchData, windowId }) {
 
     if (editingNodeId && nextName) {
       renameNode(editingNodeId, nextName);
-      playSound('click');
+      playSound('rename');
     }
 
     cancelRename();
@@ -563,7 +612,7 @@ export function FileExplorerApp({ launchData, windowId }) {
         } else {
           deleteNodesPermanently(items.map((node) => node.id));
         }
-        playSound('close');
+        playSound('delete');
       }
 
       return;
@@ -574,7 +623,7 @@ export function FileExplorerApp({ launchData, windowId }) {
       : moveNodesToTrash(items.map((node) => node.id));
 
     if (movedIds.length > 0) {
-      playSound('close');
+      playSound('trash');
     }
   };
 
@@ -591,7 +640,7 @@ export function FileExplorerApp({ launchData, windowId }) {
     } else {
       restoreNodesFromTrash(items.map((node) => node.id));
     }
-    playSound('open');
+    playSound('restoreFile');
   };
 
   const handleRestoreAllTrash = async () => {
@@ -612,7 +661,7 @@ export function FileExplorerApp({ launchData, windowId }) {
 
     if (confirmed) {
       restoreAllFromTrash();
-      playSound('open');
+      playSound('restoreFile');
     }
   };
 
@@ -629,6 +678,23 @@ export function FileExplorerApp({ launchData, windowId }) {
           : `Mover ${getElementCountLabel(items)} a la Papelera?`,
       detail: 'Podras restaurarlo desde la Papelera si lo necesitas.',
       confirmLabel: 'Mover',
+      icon: 'warning',
+    });
+  };
+
+  const confirmMoveNodesFromTrash = async (items, targetFolderId) => {
+    if (items.length === 0) {
+      return false;
+    }
+
+    return showConfirm({
+      title: 'Restaurar desde Papelera',
+      message:
+        items.length === 1
+          ? `Restaurar "${items[0].name}"?`
+          : `Restaurar ${getElementCountLabel(items)}?`,
+      detail: `Se movera a ${getDropFolderLabel(targetFolderId)} y dejara de estar en la Papelera.`,
+      confirmLabel: 'Restaurar',
       icon: 'warning',
     });
   };
@@ -651,7 +717,7 @@ export function FileExplorerApp({ launchData, windowId }) {
 
     if (confirmed) {
       emptyTrash();
-      playSound('close');
+      playSound('delete');
     }
   };
 
@@ -665,8 +731,14 @@ export function FileExplorerApp({ launchData, windowId }) {
       return;
     }
 
-    if (node.type === 'file' && node.name.toLowerCase().endsWith('.txt')) {
+    if (node.type === 'file' && isTextFileName(node.name)) {
       openApp('notepad', { fileId: node.id });
+      playSound('open');
+      return;
+    }
+
+    if (node.type === 'file' && isImageFileName(node.name)) {
+      openApp('image-viewer', { fileId: node.id });
       playSound('open');
     }
   };
@@ -685,15 +757,18 @@ export function FileExplorerApp({ launchData, windowId }) {
       return false;
     }
 
-    if (isPathInsideTrash(getPath(sourceNode.id))) {
-      return false;
+    const sourceInTrash = isPathInsideTrash(getPath(sourceNode.id));
+    const targetInTrash = targetFolder.id === recycleBinFolderId || isPathInsideTrash(getPath(targetFolder.id));
+
+    if (sourceInTrash) {
+      return !targetInTrash;
     }
 
-    if (targetFolder.id === recycleBinFolderId) {
+    if (targetInTrash && targetFolder.id === recycleBinFolderId) {
       return true;
     }
 
-    if (isPathInsideTrash(getPath(targetFolder.id))) {
+    if (targetInTrash) {
       return false;
     }
 
@@ -709,6 +784,48 @@ export function FileExplorerApp({ launchData, windowId }) {
 
   const canDropNodesToFolder = (items, targetFolderId) =>
     items.length > 0 && items.every((item) => canDropNodeToFolder(item, targetFolderId));
+
+  const canDropNodesToPaint = (items) =>
+    items.length === 1 &&
+    items[0].type === 'file' &&
+    isImageFileName(items[0].name) &&
+    !isPathInsideTrash(getPath(items[0].id));
+
+  const getDropFolderLabel = (folderId) => {
+    if (folderId === desktopFolderId) {
+      return 'Escritorio';
+    }
+
+    if (folderId === recycleBinFolderId) {
+      return 'Papelera';
+    }
+
+    return getNode(folderId)?.name ?? 'carpeta';
+  };
+
+  const getDragDropFeedback = (dropTarget, isValidDropTarget, isTrashDrag) => {
+    if (!dropTarget) {
+      return { state: 'invalid', label: 'No se puede soltar aqui' };
+    }
+
+    if (!isValidDropTarget) {
+      return { state: 'invalid', label: 'No se puede soltar aqui' };
+    }
+
+    if (dropTarget.type === 'paint') {
+      return { state: 'valid', label: 'Editar en Paint' };
+    }
+
+    if (dropTarget.folderId === recycleBinFolderId) {
+      return { state: 'valid', label: 'Enviar a Papelera' };
+    }
+
+    if (isTrashDrag) {
+      return { state: 'valid', label: `Restaurar en ${getDropFolderLabel(dropTarget.folderId)}` };
+    }
+
+    return { state: 'valid', label: `Mover a ${getDropFolderLabel(dropTarget.folderId)}` };
+  };
 
   const placeMovedNodesOnDesktop = (nodeIds, dropPosition) => {
     let nextIconPositions = { ...iconPositions };
@@ -730,7 +847,7 @@ export function FileExplorerApp({ launchData, windowId }) {
   };
 
   const handleNodePointerDown = (event, node, isEditing) => {
-    if (event.button !== 0 || isEditing || protectedNodeIds.has(node.id) || isPathInsideTrash(getPath(node.id))) {
+    if (event.button !== 0 || isEditing || protectedNodeIds.has(node.id)) {
       return;
     }
 
@@ -783,17 +900,27 @@ export function FileExplorerApp({ launchData, windowId }) {
       didMove = true;
       latestClientPosition = { x: moveEvent.clientX, y: moveEvent.clientY };
       setDraggingNodeIds(dragNodeIds);
+
+      const dropTarget = getFileDropTargetFromPoint(moveEvent.clientX, moveEvent.clientY, element);
+      const isTrashDrag = dragNodes.some((dragNode) => isPathInsideTrash(getPath(dragNode.id)));
+      const isValidDropTarget = Boolean(
+        dropTarget &&
+        (dropTarget.type === 'paint'
+          ? canDropNodesToPaint(dragNodes)
+          : canDropNodesToFolder(dragNodes, dropTarget.folderId)),
+      );
+      latestDropTarget =
+        isValidDropTarget ? dropTarget : null;
+      setActiveDropTarget(latestDropTarget);
+
+      const dragFeedback = getDragDropFeedback(dropTarget, isValidDropTarget, isTrashDrag);
+
       setDragPreview({
+        dropState: dragFeedback.state,
+        feedbackLabel: dragFeedback.label,
         nodes: dragNodes,
         position: latestClientPosition,
       });
-
-      const dropTarget = getFileDropTargetFromPoint(moveEvent.clientX, moveEvent.clientY, element);
-      latestDropTarget =
-        dropTarget && canDropNodesToFolder(dragNodes, dropTarget.folderId)
-          ? dropTarget
-          : null;
-      setActiveDropTarget(latestDropTarget);
     };
 
     const handlePointerUp = async (upEvent) => {
@@ -805,19 +932,46 @@ export function FileExplorerApp({ launchData, windowId }) {
         element.releasePointerCapture(pointerId);
       }
 
-      if (didMove && latestDropTarget?.folderId) {
+      if (didMove && latestDropTarget) {
         const dropPosition = { x: upEvent.clientX ?? latestClientPosition.x, y: upEvent.clientY ?? latestClientPosition.y };
 
-        if (latestDropTarget.folderId === recycleBinFolderId) {
+        if (latestDropTarget.type === 'paint' && dragNodes.length === 1) {
+          dispatchPaintFileDrop(latestDropTarget.windowId, dragNodes[0].id);
+        } else if (latestDropTarget.folderId === recycleBinFolderId) {
           const confirmed = await confirmMoveNodesToTrash(dragNodes);
 
           if (confirmed) {
             moveNodesToTrash(dragNodeIds);
             clearExplorerSelection();
-            playSound('close');
+            playSound('trash');
           }
         } else {
-          const movedNodeIds = moveNodesToFolder(dragNodeIds, latestDropTarget.folderId);
+          const trashDragNodes = dragNodes.filter((dragNode) => isPathInsideTrash(getPath(dragNode.id)));
+          const normalDragNodes = dragNodes.filter((dragNode) => !isPathInsideTrash(getPath(dragNode.id)));
+          let movedNodeIds = [];
+
+          if (trashDragNodes.length > 0) {
+            const confirmed = await confirmMoveNodesFromTrash(trashDragNodes, latestDropTarget.folderId);
+
+            if (!confirmed) {
+              clearActiveFileDropTargets();
+              setDraggingNodeIds([]);
+              setDragPreview(null);
+              return;
+            }
+
+            movedNodeIds = [
+              ...movedNodeIds,
+              ...moveNodesFromTrashToFolder(trashDragNodes.map((trashNode) => trashNode.id), latestDropTarget.folderId),
+            ];
+          }
+
+          if (normalDragNodes.length > 0) {
+            movedNodeIds = [
+              ...movedNodeIds,
+              ...moveNodesToFolder(normalDragNodes.map((normalNode) => normalNode.id), latestDropTarget.folderId),
+            ];
+          }
 
           if (movedNodeIds.length === 0) {
             clearActiveFileDropTargets();
@@ -832,7 +986,7 @@ export function FileExplorerApp({ launchData, windowId }) {
 
           setSelectedNodes(latestDropTarget.folderId === currentFolderId ? movedNodeIds : []);
           setSelectionAnchorNodeId(latestDropTarget.folderId === currentFolderId ? movedNodeIds[0] : null);
-          playSound('click');
+          playSound(trashDragNodes.length > 0 ? 'restoreFile' : 'click');
         }
       }
 
@@ -1015,6 +1169,13 @@ export function FileExplorerApp({ launchData, windowId }) {
     if (event.ctrlKey && !event.altKey && !event.metaKey && !shouldIgnoreFileShortcut) {
       const shortcutKey = event.key.toLowerCase();
 
+      if (shortcutKey === 'f') {
+        event.preventDefault();
+        searchInputRef.current?.focus();
+        playSound('search');
+        return;
+      }
+
       if (shortcutKey === 'c' && canOperateSelectedNodes) {
         event.preventDefault();
         handleCopyNodes(selectedNodes);
@@ -1133,6 +1294,41 @@ export function FileExplorerApp({ launchData, windowId }) {
         </div>
       </div>
 
+      <div className="ros-explorer-searchbar">
+        <label htmlFor={explorerSearchInputId}>Buscar</label>
+        <input
+          id={explorerSearchInputId}
+          ref={searchInputRef}
+          value={searchQuery}
+          placeholder={`Buscar en ${currentFolderTitle}`}
+          autoComplete="off"
+          spellCheck="false"
+          autoFocus={Boolean(launchData?.searchMode || launchData?.searchQuery)}
+          onChange={(event) => handleSearchChange(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === 'Escape' && searchQuery) {
+              event.preventDefault();
+              clearSearch();
+            }
+
+            if (event.key === 'Enter' && children.length === 1) {
+              event.preventDefault();
+              handleOpenNode(children[0]);
+            }
+          }}
+        />
+        {isSearchActive ? (
+          <button className="ros-app-toolbar-button" type="button" onClick={clearSearch}>
+            Limpiar
+          </button>
+        ) : null}
+        <span>
+          {isSearchActive
+            ? `${children.length} resultado${children.length === 1 ? '' : 's'} en ${searchScopeText}`
+            : 'Ctrl+F para buscar archivos y carpetas'}
+        </span>
+      </div>
+
       <div className="ros-file-explorer-layout">
         <aside className="ros-file-tree" aria-label="Arbol de carpetas">
           {folderTree.map((folder) => (
@@ -1144,7 +1340,7 @@ export function FileExplorerApp({ launchData, windowId }) {
               type="button"
               onClick={() => {
                 if (navigateToFolder(folder.id)) {
-                  playSound('click');
+                  playSound('navigation');
                 }
               }}
             >
@@ -1156,7 +1352,7 @@ export function FileExplorerApp({ launchData, windowId }) {
 
         <section
           className="ros-file-list"
-          data-drop-folder-id={!isCurrentFolderInTrash ? currentFolderId : undefined}
+          data-drop-folder-id={currentFolderId === recycleBinFolderId ? recycleBinFolderId : !isCurrentFolderInTrash ? currentFolderId : undefined}
           data-view-mode={viewMode}
           aria-label="Contenido de carpeta"
           onClick={() => clearExplorerSelection()}
@@ -1164,14 +1360,29 @@ export function FileExplorerApp({ launchData, windowId }) {
         >
           {children.length === 0 ? (
             <div className="ros-empty-folder">
-              <span className="ros-empty-folder-icon" data-type={isRecycleBinFolder ? 'trash' : 'folder'} aria-hidden="true" />
-              <h2>{isRecycleBinFolder ? 'La Papelera esta vacia' : 'Esta carpeta esta vacia'}</h2>
+              <span className="ros-empty-folder-icon" data-type={isSearchActive ? 'search' : isRecycleBinFolder ? 'trash' : 'folder'} aria-hidden="true" />
+              <h2>{isSearchActive ? 'No se encontraron resultados' : isRecycleBinFolder ? 'La Papelera esta vacia' : 'Esta carpeta esta vacia'}</h2>
               <p>
-                {isRecycleBinFolder
+                {isSearchActive
+                  ? `No hay coincidencias para "${trimmedSearchQuery}" en ${searchScopeText}.`
+                  : isRecycleBinFolder
                   ? 'Los elementos eliminados apareceran aqui hasta que los restaures o los borres definitivamente.'
                   : 'Crea una carpeta o un documento de texto para empezar.'}
               </p>
-              {canCreateInCurrentFolder ? (
+              {isSearchActive ? (
+                <div className="ros-empty-folder-actions">
+                  <button
+                    className="ros-app-toolbar-button"
+                    type="button"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      clearSearch();
+                    }}
+                  >
+                    Limpiar busqueda
+                  </button>
+                </div>
+              ) : canCreateInCurrentFolder ? (
                 <div className="ros-empty-folder-actions">
                   <button
                     className="ros-app-toolbar-button"
@@ -1221,12 +1432,18 @@ export function FileExplorerApp({ launchData, windowId }) {
                   </button>
                   <button
                     type="button"
+                    className={isSearchActive ? 'ros-file-list-heading' : undefined}
                     onClick={(event) => {
                       event.stopPropagation();
+
+                      if (isSearchActive) {
+                        return;
+                      }
+
                       handleSortChange('updatedAt');
                     }}
                   >
-                    Modificado
+                    {isSearchActive ? 'Ubicacion' : 'Modificado'}
                   </button>
                 </div>
               ) : null}
@@ -1295,7 +1512,9 @@ export function FileExplorerApp({ launchData, windowId }) {
                         )}
                       </span>
                       <span className="ros-file-row-type">{getNodeTypeLabel(node)}</span>
-                      <span className="ros-file-row-date">{formatShortDateTime(node.updatedAt)}</span>
+                      <span className="ros-file-row-date" title={isSearchActive ? getPathLabel(getPath(node.parentId)) : undefined}>
+                        {isSearchActive ? getPathLabel(getPath(node.parentId)) : formatShortDateTime(node.updatedAt)}
+                      </span>
                     </button>
                   );
                 })}
@@ -1365,37 +1584,65 @@ export function FileExplorerApp({ launchData, windowId }) {
               {selectedNode.type === 'file' ? (
                 <section className="ros-file-preview" aria-label="Vista previa">
                   <h3>Vista previa</h3>
-                  <pre>{selectedNode.content || 'Archivo vacio.'}</pre>
+                  {isSelectedNodeImage ? (
+                    <img className="ros-file-image-preview" src={selectedNode.content} alt={selectedNode.name} />
+                  ) : (
+                    <pre>{selectedNode.content || 'Archivo vacio.'}</pre>
+                  )}
                 </section>
               ) : null}
             </>
           ) : (
-            <>
-              <span className="ros-file-node-icon ros-file-node-icon-large" data-type={getExplorerNodeIconType(currentFolder, trashItemCount)} aria-hidden="true" />
-              <h2>{currentFolder?.name ?? 'Carpeta'}</h2>
-              <p>{children.length} elementos</p>
-              <dl className="ros-file-details-list">
-                <div>
-                  <dt>Ubicacion</dt>
-                  <dd>{path.slice(0, -1).map((node) => node.name).join('\\') || 'C:'}</dd>
-                </div>
-                <div>
-                  <dt>Vista</dt>
-                  <dd>{viewModes.find((mode) => mode.id === viewMode)?.label}</dd>
-                </div>
-                <div>
-                  <dt>Orden</dt>
-                  <dd>{sortOptions.find((option) => option.id === sortBy)?.label} {getSortHint(sortBy, sortDirection)}</dd>
-                </div>
-              </dl>
-              <p className="ros-file-details-help">Selecciona un archivo o carpeta.</p>
-            </>
+            isSearchActive ? (
+              <>
+                <span className="ros-file-node-icon ros-file-node-icon-large" data-type="search" aria-hidden="true" />
+                <h2>Resultados de busqueda</h2>
+                <p>{children.length} coincidencia{children.length === 1 ? '' : 's'}</p>
+                <dl className="ros-file-details-list">
+                  <div>
+                    <dt>Buscar</dt>
+                    <dd>{trimmedSearchQuery}</dd>
+                  </div>
+                  <div>
+                    <dt>Ubicacion</dt>
+                    <dd>{searchScopeText}</dd>
+                  </div>
+                  <div>
+                    <dt>Orden</dt>
+                    <dd>{sortOptions.find((option) => option.id === sortBy)?.label} {getSortHint(sortBy, sortDirection)}</dd>
+                  </div>
+                </dl>
+                <p className="ros-file-details-help">Doble click abre el resultado seleccionado.</p>
+              </>
+            ) : (
+              <>
+                <span className="ros-file-node-icon ros-file-node-icon-large" data-type={getExplorerNodeIconType(currentFolder, trashItemCount)} aria-hidden="true" />
+                <h2>{currentFolder?.name ?? 'Carpeta'}</h2>
+                <p>{children.length} elementos</p>
+                <dl className="ros-file-details-list">
+                  <div>
+                    <dt>Ubicacion</dt>
+                    <dd>{path.slice(0, -1).map((node) => node.name).join('\\') || 'C:'}</dd>
+                  </div>
+                  <div>
+                    <dt>Vista</dt>
+                    <dd>{viewModes.find((mode) => mode.id === viewMode)?.label}</dd>
+                  </div>
+                  <div>
+                    <dt>Orden</dt>
+                    <dd>{sortOptions.find((option) => option.id === sortBy)?.label} {getSortHint(sortBy, sortDirection)}</dd>
+                  </div>
+                </dl>
+                <p className="ros-file-details-help">Selecciona un archivo o carpeta.</p>
+              </>
+            )
           )}
         </aside>
       </div>
       {dragPreview ? (
         <div
           className="ros-file-drag-preview"
+          data-drop-state={dragPreview.dropState}
           style={{
             left: `${dragPreview.position.x}px`,
             top: `${dragPreview.position.y}px`,
@@ -1403,7 +1650,10 @@ export function FileExplorerApp({ launchData, windowId }) {
           aria-hidden="true"
         >
           <span className="ros-file-node-icon" data-type={getExplorerNodeIconType(dragPreview.nodes[0], trashItemCount)} />
-          <span>{dragPreview.nodes.length === 1 ? dragPreview.nodes[0].name : `${dragPreview.nodes.length} elementos`}</span>
+          <span className="ros-file-drag-preview-text">
+            <span>{dragPreview.nodes.length === 1 ? dragPreview.nodes[0].name : `${dragPreview.nodes.length} elementos`}</span>
+            {dragPreview.feedbackLabel ? <small>{dragPreview.feedbackLabel}</small> : null}
+          </span>
         </div>
       ) : null}
       {contextMenu ? <DesktopContextMenu items={getContextMenuItems()} position={contextMenu.position} /> : null}

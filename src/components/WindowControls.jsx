@@ -9,9 +9,13 @@ export function WindowControls({
 }) {
   const playSound = useSystemSound();
 
-  const handleControlClick = (event, action) => {
+  const handleControlClick = async (event, action, sound) => {
     event.stopPropagation();
-    action();
+    const result = await action();
+
+    if (result !== false) {
+      playSound(sound);
+    }
   };
 
   return (
@@ -25,8 +29,7 @@ export function WindowControls({
         type="button"
         aria-label="Minimizar"
         onClick={(event) => {
-          playSound('minimize');
-          handleControlClick(event, onMinimize);
+          void handleControlClick(event, onMinimize, 'minimize');
         }}
       >
         <span aria-hidden="true" />
@@ -36,8 +39,7 @@ export function WindowControls({
         type="button"
         aria-label={isMaximized ? 'Restaurar' : 'Maximizar'}
         onClick={(event) => {
-          playSound('restore');
-          handleControlClick(event, isMaximized ? onRestore : onMaximize);
+          void handleControlClick(event, isMaximized ? onRestore : onMaximize, 'restore');
         }}
       >
         <span data-restore={isMaximized ? 'true' : 'false'} aria-hidden="true" />
@@ -47,8 +49,7 @@ export function WindowControls({
         type="button"
         aria-label="Cerrar"
         onClick={(event) => {
-          playSound('close');
-          handleControlClick(event, onClose);
+          void handleControlClick(event, onClose, 'close');
         }}
       >
         X

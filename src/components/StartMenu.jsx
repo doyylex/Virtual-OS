@@ -1,5 +1,10 @@
+import { useState } from 'react';
 import { appRegistry } from '../apps/appRegistry.js';
 import { useSystemSound } from '../hooks/useSystemSound.js';
+import { getNodeIconTone, isImageFileName, isTextFileName } from '../services/fileIcons.js';
+import { getNodeSearchRank, nodeMatchesSearchQuery, normalizeSearchText } from '../services/search.js';
+import { getPathLabel, isPathInsideTrash } from '../services/trashPaths.js';
+import { useFileSystemStore } from '../store/useFileSystemStore.js';
 import { useUiStore } from '../store/useUiStore.js';
 import { useWindowStore } from '../store/useWindowStore.js';
 
@@ -8,27 +13,139 @@ const systemLinks = [
   { label: 'Mi PC', iconTone: 'computer', appId: 'computer' },
   { label: 'Bloc de notas', iconTone: 'notepad', appId: 'notepad' },
   { label: 'Terminal', iconTone: 'terminal', appId: 'terminal' },
+  { label: 'Calculadora', iconTone: 'calculator', appId: 'calculator' },
   { label: 'Panel de control', iconTone: 'settings', appId: 'settings' },
+  { label: 'Buscar', iconTone: 'search', appId: 'explorer', launchData: { folderId: 'root', searchMode: true } },
   { label: 'Ayuda y soporte tecnico', iconTone: 'help' },
 ];
 
+const matchesSearch = (query, ...values) =>
+  values.some((value) => normalizeSearchText(value).includes(query));
+
 export function StartMenu() {
   const isStartMenuOpen = useUiStore((state) => state.isStartMenuOpen);
-  const isAllProgramsOpen = useUiStore((state) => state.isAllProgramsOpen);
-  const closeStartMenu = useUiStore((state) => state.closeStartMenu);
-  const toggleAllPrograms = useUiStore((state) => state.toggleAllPrograms);
-  const openApp = useWindowStore((state) => state.openApp);
-  const playSound = useSystemSound();
-
-  const handleOpenApp = (appId, launchData) => {
-    openApp(appId, launchData);
-    closeStartMenu();
-    playSound('open');
-  };
 
   if (!isStartMenuOpen) {
     return null;
   }
+
+  return <StartMenuContent />;
+}
+
+function StartMenuContent() {
+  const [searchQuery, setSearchQuery] = useState('');
+  const isAllProgramsOpen = useUiStore((state) => state.isAllProgramsOpen);
+  const closeStartMenu = useUiStore((state) => state.closeStartMenu);
+  const toggleAllPrograms = useUiStore((state) => state.toggleAllPrograms);
+  const nodes = useFileSystemStore((state) => state.nodes);
+  const getPath = useFileSystemStore((state) => state.getPath);
+  const openApp = useWindowStore((state) => state.openApp);
+  const playSound = useSystemSound();
+  const normalizedSearchQuery = normalizeSearchText(searchQuery);
+  const searchableApps = appRegistry.filter((app) => !app.hidden);
+  const pinnedApps = searchableApps.filter((app) => app.quickLaunch);
+  const filteredApps = normalizedSearchQuery
+    ? searchableApps.filter((app) => matchesSearch(normalizedSearchQuery, app.title, app.description, app.id))
+    : pinnedApps;
+  const filteredAppIds = new Set(filteredApps.map((app) => app.id));
+  const filteredSystemLinks = normalizedSearchQuery
+    ? systemLinks.filter((link) => matchesSearch(normalizedSearchQuery, link.label) && (!link.appId || !filteredAppIds.has(link.appId)))
+    : systemLinks;
+  const matchingFileNodeResults = normalizedSearchQuery
+    ? nodes
+        .map((node) => {
+          const path = getPath(node.id);
+          const parentPathLabel = getPathLabel(getPath(node.parentId), 'C:');
+
+          return { node, parentPathLabel, path };
+        })
+        .filter(({ node, parentPathLabel, path }) => {
+          if (node.id === 'root' || isPathInsideTrash(path)) {
+            return false;
+          }
+
+          return nodeMatchesSearchQuery(node, normalizedSearchQuery, [parentPathLabel]);
+        })
+        .sort((firstResult, secondResult) => {
+          const rankDifference =
+            getNodeSearchRank(firstResult.node, normalizedSearchQuery) -
+            getNodeSearchRank(secondResult.node, normalizedSearchQuery);
+
+          if (rankDifference !== 0) {
+            return rankDifference;
+          }
+
+          if (firstResult.node.type !== secondResult.node.type) {
+            return firstResult.node.type === 'folder' ? -1 : 1;
+          }
+
+          return firstResult.node.name.localeCompare(secondResult.node.name, 'es');
+        })
+    : [];
+  const filteredFileNodeResults = matchingFileNodeResults.slice(0, 5);
+  const exactFileNodeMatch = normalizedSearchQuery
+    ? matchingFileNodeResults.find((result) => getNodeSearchRank(result.node, normalizedSearchQuery) === 0)?.node
+    : null;
+  const hasSearchResults = filteredApps.length > 0 || filteredSystemLinks.length > 0 || filteredFileNodeResults.length > 0;
+
+  const handleSearchChange = (value) => {
+    if (!normalizedSearchQuery && normalizeSearchText(value)) {
+      playSound('search');
+    }
+
+    setSearchQuery(value);
+  };
+
+  const handleOpenApp = (appId, launchData, soundName = 'open') => {
+    openApp(appId, launchData);
+    setSearchQuery('');
+    closeStartMenu();
+    playSound(soundName);
+  };
+
+  const handleOpenFileNode = (node) => {
+    if (node.type === 'folder') {
+      handleOpenApp('explorer', { folderId: node.id });
+      return;
+    }
+
+    if (node.type === 'file' && isTextFileName(node.name)) {
+      handleOpenApp('notepad', { fileId: node.id });
+      return;
+    }
+
+    if (node.type === 'file' && isImageFileName(node.name)) {
+      handleOpenApp('image-viewer', { fileId: node.id });
+      return;
+    }
+
+    handleOpenApp('explorer', { folderId: node.parentId ?? 'root', searchQuery: node.name });
+  };
+
+  const handleSearchSubmit = (event) => {
+    if (event.key !== 'Enter' || !normalizedSearchQuery) {
+      return;
+    }
+
+    event.preventDefault();
+
+    if (exactFileNodeMatch) {
+      handleOpenFileNode(exactFileNodeMatch);
+      return;
+    }
+
+    if (matchingFileNodeResults.length === 1 && filteredApps.length === 0 && filteredSystemLinks.length === 0) {
+      handleOpenFileNode(matchingFileNodeResults[0].node);
+      return;
+    }
+
+    if (filteredApps.length === 1 && filteredSystemLinks.length === 0 && matchingFileNodeResults.length === 0) {
+      handleOpenApp(filteredApps[0].id);
+      return;
+    }
+
+    handleOpenApp('explorer', { folderId: 'root', searchQuery: searchQuery.trim() }, 'search');
+  };
 
   return (
     <nav className="ros-start-menu" aria-label="Menu inicio">
@@ -42,8 +159,19 @@ export function StartMenu() {
 
       <div className="ros-start-menu-body">
         <section className="ros-start-menu-column" aria-label="Programas fijados">
-          <p className="ros-menu-section-title">Programas fijados</p>
-          {appRegistry.filter((app) => app.quickLaunch && !app.hidden).map((app) => (
+          <label className="ros-start-search">
+            <span>Buscar</span>
+            <input
+              value={searchQuery}
+              placeholder="Apps, archivos..."
+              autoComplete="off"
+              spellCheck="false"
+              onChange={(event) => handleSearchChange(event.target.value)}
+              onKeyDown={handleSearchSubmit}
+            />
+          </label>
+          <p className="ros-menu-section-title">{normalizedSearchQuery ? 'Resultados' : 'Programas fijados'}</p>
+          {filteredApps.map((app) => (
             <button
               className="ros-menu-item"
               key={app.id}
@@ -57,21 +185,54 @@ export function StartMenu() {
               </span>
             </button>
           ))}
-          <button
-            className="ros-all-programs-button"
-            type="button"
-            aria-expanded={isAllProgramsOpen}
-            onClick={() => {
-              toggleAllPrograms();
-              playSound('click');
-            }}
-          >
-            Todos los programas
-            <span aria-hidden="true">&gt;</span>
-          </button>
-          {isAllProgramsOpen ? (
+          {filteredFileNodeResults.length > 0 ? (
+            <>
+              <p className="ros-menu-section-title">Archivos y carpetas</p>
+              {filteredFileNodeResults.map(({ node, parentPathLabel }) => (
+                <button
+                  className="ros-menu-item"
+                  key={node.id}
+                  type="button"
+                  onClick={() => handleOpenFileNode(node)}
+                >
+                  <span className="ros-menu-item-icon" data-kind={getNodeIconTone(node)} aria-hidden="true" />
+                  <span>
+                    <strong>{node.name}</strong>
+                    <small>{parentPathLabel}</small>
+                  </span>
+                </button>
+              ))}
+            </>
+          ) : null}
+          {normalizedSearchQuery && !hasSearchResults ? (
+            <p className="ros-menu-empty">No hay resultados.</p>
+          ) : null}
+          {normalizedSearchQuery ? (
+            <button
+              className="ros-all-programs-button"
+              type="button"
+              onClick={() => handleOpenApp('explorer', { folderId: 'root', searchQuery: searchQuery.trim() }, 'search')}
+            >
+              Buscar archivos
+              <span aria-hidden="true">&gt;</span>
+            </button>
+          ) : (
+            <button
+              className="ros-all-programs-button"
+              type="button"
+              aria-expanded={isAllProgramsOpen}
+              onClick={() => {
+                toggleAllPrograms();
+                playSound('click');
+              }}
+            >
+              Todos los programas
+              <span aria-hidden="true">&gt;</span>
+            </button>
+          )}
+          {isAllProgramsOpen && !normalizedSearchQuery ? (
             <div className="ros-programs-panel" aria-label="Todos los programas">
-              {appRegistry.filter((app) => !app.hidden).map((app) => (
+              {searchableApps.map((app) => (
                 <button className="ros-menu-item ros-menu-item-compact" key={app.id} type="button" onClick={() => handleOpenApp(app.id)}>
                   <span className="ros-menu-item-icon" data-kind={app.iconTone} aria-hidden="true" />
                   {app.title}
@@ -82,14 +243,14 @@ export function StartMenu() {
         </section>
 
         <section className="ros-start-menu-column ros-start-menu-column-alt" aria-label="Accesos del sistema">
-          {systemLinks.map((link) => (
+          {filteredSystemLinks.map((link) => (
             <button
               className="ros-menu-item ros-menu-item-secondary"
               key={link.label}
               type="button"
               onClick={() => {
                 if (link.appId) {
-                  handleOpenApp(link.appId, link.launchData);
+                  handleOpenApp(link.appId, link.launchData, link.iconTone === 'search' ? 'search' : 'open');
                 }
               }}
             >

@@ -1,4 +1,5 @@
 import { joinFileName, splitFileName } from './fileNames.js';
+import { isImageFileName, isTextFileName } from './fileIcons.js';
 
 const rootId = 'root';
 const defaultFolderId = 'documents';
@@ -629,6 +630,10 @@ export function runTerminalCommand(input, context) {
         return { type: 'output', lines: [`"${result.node.name}" es una carpeta.`] };
       }
 
+      if (!isTextFileName(result.node.name)) {
+        return { type: 'output', lines: [`"${result.node.name}" no es un archivo de texto.`] };
+      }
+
       return { type: 'output', lines: (result.node.content || 'Archivo vacio.').split('\n') };
     }
     case 'mkdir': {
@@ -779,9 +784,14 @@ export function runTerminalCommand(input, context) {
         return { type: 'output', lines: [`Abriendo carpeta: ${result.node.name}`] };
       }
 
-      if (result.node.name.toLowerCase().endsWith('.txt')) {
+      if (isTextFileName(result.node.name)) {
         context.openApp('notepad', { fileId: result.node.id });
         return { type: 'output', lines: [`Abriendo archivo: ${result.node.name}`] };
+      }
+
+      if (isImageFileName(result.node.name)) {
+        context.openApp('image-viewer', { fileId: result.node.id });
+        return { type: 'output', lines: [`Abriendo imagen: ${result.node.name}`] };
       }
 
       return { type: 'output', lines: [`No hay una app asociada para "${result.node.name}".`] };
